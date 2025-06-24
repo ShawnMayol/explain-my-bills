@@ -1,12 +1,24 @@
-# React + Vite
+# Explain My Bills!
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Bill Summarizer and Tracker** – making confusing bills easy to understand.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Description
 
-## Expanding the ESLint configuration
+Utility, telecom, and medical bills are often unclear and full of fine print.
+**Explain My Bills** is an AI-powered web application that helps users:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+-   Translate complex billing information into **plain, understandable language**
+-   Identify **hidden charges** and **sudden billing spikes**
+-   Track and manage **recurring payments** efficiently
+
+---
+
+## Main Features
+
+-   **AI-Powered Bill Summarization**
+-   **Plain Language Translation** for technical billing terms
+-   **Automated Flagging** of hidden fees and abnormal increases
+-   **Categorization** of bill types and spending trends
+-   **Recurring Bill Reminders** and payment scheduler
