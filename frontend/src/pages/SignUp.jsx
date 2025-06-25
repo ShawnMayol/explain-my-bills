@@ -6,6 +6,8 @@ import {
     onAuthStateChanged,
 } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { FcGoogle } from "react-icons/fc";
 
 export default function SignUp() {
     const [username, setUsername] = useState("");
@@ -46,6 +48,17 @@ export default function SignUp() {
             navigate("/dashboard");
         } catch (err) {
             setError(err.message);
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        try {
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+            navigate("/dashboard");
+        } catch (err) {
+            setError("Google sign-in failed.");
+            console.error(err);
         }
     };
 
@@ -92,6 +105,23 @@ export default function SignUp() {
                         className="p-3 text-lg border-2 font-semibold rounded-4xl hover:cursor-pointer w-full mb-4"
                     >
                         Sign Up
+                    </button>
+
+                    <div className="flex items-center w-full mb-4">
+                        <hr className="flex-grow border-t border-gray-300" />
+                        <span className="mx-4 text-gray-500 font-medium text-sm">
+                            OR
+                        </span>
+                        <hr className="flex-grow border-t border-gray-300" />
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={handleGoogleSignIn}
+                        className="flex items-center justify-center gap-3 p-3 text-lg border-2 font-semibold rounded-4xl hover:cursor-pointer w-full mb-6"
+                    >
+                        <FcGoogle className="w-6 h-6" />
+                        Continue with Google
                     </button>
                     <p className="text-sm">
                         Already have an account?{" "}

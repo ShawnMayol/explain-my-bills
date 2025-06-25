@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import {
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    GoogleAuthProvider,
+    signInWithPopup,
+} from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
+import { FcGoogle } from "react-icons/fc";
 
 export default function SignIn() {
     const [email, setEmail] = useState("");
@@ -28,6 +34,17 @@ export default function SignIn() {
             navigate("/dashboard");
         } catch (err) {
             setError("Invalid email or password.");
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        try {
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+            navigate("/dashboard");
+        } catch (err) {
+            setError("Google sign-in failed.");
+            console.error(err);
         }
     };
 
@@ -61,6 +78,24 @@ export default function SignIn() {
                     >
                         Sign In
                     </button>
+
+                    <div className="flex items-center w-full mb-4">
+                        <hr className="flex-grow border-t border-gray-300" />
+                        <span className="mx-4 text-gray-500 font-medium text-sm">
+                            OR
+                        </span>
+                        <hr className="flex-grow border-t border-gray-300" />
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={handleGoogleSignIn}
+                        className="flex items-center justify-center gap-3 p-3 text-lg border-2 font-semibold rounded-4xl hover:cursor-pointer w-full mb-6"
+                    >
+                        <FcGoogle className="w-6 h-6" />
+                        Continue with Google
+                    </button>
+
                     <p className="text-sm">
                         Don’t have an account?{" "}
                         <Link
