@@ -1,28 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { signOut } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { useAuth } from "../context/AuthContext";
+import SplashScreen from "../components/SplashScreen";
 
 export default function LandingPage() {
-    const [user, setUser] = useState(null);
+    const { user, loading } = useAuth();
     const navigate = useNavigate();
-
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-        });
-        return () => unsubscribe();
-    }, []);
 
     const handleLogout = async () => {
         try {
             await signOut(auth);
-            setUser(null);
             navigate("/");
         } catch (error) {
             console.error("Error signing out:", error);
         }
     };
+
+    if (loading) {
+        return <SplashScreen />;
+    }
 
     return (
         <div className="h-screen w-screen items-center flex flex-col justify-center">

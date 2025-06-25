@@ -1,31 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-    createUserWithEmailAndPassword,
-    updateProfile,
-    onAuthStateChanged,
-} from "firebase/auth";
-import { auth } from "../../firebase/firebaseConfig";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "../../firebase/firebaseConfig";
+import { useAuth } from "../context/AuthContext";
+import SplashScreen from "../components/SplashScreen";
 import { FcGoogle } from "react-icons/fc";
 
 export default function SignUp() {
+    const { user, loading } = useAuth();
+    const navigate = useNavigate();
+
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
 
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                navigate("/dashboard");
-            }
-        });
-        return () => unsubscribe();
-    }, [navigate]);
+    if (loading) return <SplashScreen />;
+    if (user) {
+        navigate("/dashboard");
+        return null;
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -123,6 +119,7 @@ export default function SignUp() {
                         <FcGoogle className="w-6 h-6" />
                         Continue with Google
                     </button>
+
                     <p className="text-sm">
                         Already have an account?{" "}
                         <Link

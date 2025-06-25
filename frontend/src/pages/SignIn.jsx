@@ -1,29 +1,28 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
     signInWithEmailAndPassword,
-    onAuthStateChanged,
     GoogleAuthProvider,
     signInWithPopup,
 } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
+import { useAuth } from "../context/AuthContext";
+import SplashScreen from "../components/SplashScreen";
 import { FcGoogle } from "react-icons/fc";
 
 export default function SignIn() {
+    const { user, loading } = useAuth();
+    const navigate = useNavigate();
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                navigate("/dashboard");
-            }
-        });
-        return () => unsubscribe();
-    }, [navigate]);
+    if (loading) return <SplashScreen />;
+    if (user) {
+        navigate("/dashboard");
+        return null;
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
