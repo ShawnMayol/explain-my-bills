@@ -6,12 +6,12 @@ from pydantic import BaseModel
 
 import os
 import enum
-import json
 
 load_dotenv()
 
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=gemini_api_key)
+model="gemini-2.5-flash"
 
 router = APIRouter(
     prefix="/bill",
@@ -37,9 +37,11 @@ class BillResponse(BaseModel):
     highlights: list[str]
     discrepancies: str
 
-# Connects with Gemini AI API. Send a bill image and get a summary. 
-# No need for manual word reading using OCR and NLP. Gemini does it for us
-# Uses the gemini-2.5-flash model
+class BillTimeSeriesResponse(BaseModel):
+    summary: str
+    suggestion: str
+
+
 @router.post("/bill_reading")
 async def bill_read(prompt_img: UploadFile = File(...)):
     
@@ -92,7 +94,7 @@ async def bill_read(prompt_img: UploadFile = File(...)):
         """
 
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=model,
             contents=[
                 Part.from_bytes(
                     data=prompt_img.file.read(), 
@@ -107,5 +109,60 @@ async def bill_read(prompt_img: UploadFile = File(...)):
         )
 
         return {"response": response.text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gemini Error: {e}")
+    
+
+@router.post("/analytics")
+async def analytics(time_series_data: str):
+
+    """
+    Analyzes user time series billing data to generate a summarized JSON response.
+
+    This endpoint connects to the Gemini AI API and processes time series data
+    of user expenses or bills to extract key information. It generates a summary
+    and suggestions in a structured JSON format with two main fields: summary
+    and suggestion.
+
+    Args:
+        time_series_data (str): A string containing time series data of user bills.
+
+    Returns:
+        dict: A JSON response containing a summary and suggestions based on the
+        time series data.
+
+    Raises:
+        HTTPException: If there is an error processing the request with the
+        Gemini API, returns a 500 error with the error message.
+    """
+
+    try:
+
+        dev_prompt = time_series_data + """
+            \n
+            Context: This time series data are the expenses or bills of a user in a particular type or category.
+            Find me the key information from this time series data and summarize it. Format it into two paragraphs:
+            one for the summary and the other for the suggestions.
+
+            The formatting will be as follows:
+
+            {
+                "summary": "This is the summary of the time series data",
+                "suggestion": "This is the suggestion of the time series data"
+            }
+
+        """
+        
+        response = client.models.generate_content(
+            model=model,
+            contents=dev_prompt,
+            config={
+                'response_mime_type': 'application/json',
+                'response_schema': BillTimeSeriesResponse
+            }
+        )
+
+        return {"response": response.text}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gemini Error: {e}")
