@@ -1,6 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { auth } from '../../firebase/firebaseConfig';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 export default function Dashboard() {
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  // Monitor authentication state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (!currentUser) {
+        navigate('/');
+      } else {
+        setUser(currentUser);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <div className="flex h-screen w-screen">
       {/* Sidebar */}
@@ -11,7 +39,9 @@ export default function Dashboard() {
             <p className="text-xs text-gray-500">June 20, 2025</p>
           </div>
           <div className="mb-10">
-            <h2 className="text-xl font-semibold mb-4">Hello, Juan!</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              Hello, {user?.displayName || user?.email || 'User'}!
+            </h2>
             <nav className="flex flex-col space-y-3">
               <a href="#" className="font-semibold hover:underline">Home</a>
               <a href="#" className="font-semibold hover:underline">Analytics</a>
@@ -21,7 +51,9 @@ export default function Dashboard() {
             </nav>
           </div>
         </div>
-        <a href="#" className="text-sm font-semibold underline">Sign-out</a>
+        <button onClick={handleLogout} className="text-sm font-semibold underline text-left">
+          Sign-out
+        </button>
       </div>
 
       {/* Main Content */}

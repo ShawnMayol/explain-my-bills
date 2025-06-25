@@ -1,6 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import {
+    createUserWithEmailAndPassword,
+    updateProfile,
+    onAuthStateChanged,
+} from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
 
 export default function SignUp() {
@@ -12,6 +16,15 @@ export default function SignUp() {
 
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                navigate("/dashboard");
+            }
+        });
+        return () => unsubscribe();
+    }, [navigate]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -22,7 +35,11 @@ export default function SignUp() {
         }
 
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
             await updateProfile(userCredential.user, {
                 displayName: username,
             });
@@ -69,19 +86,22 @@ export default function SignUp() {
 
                 {error && <p className="text-red-500 mb-4">{error}</p>}
 
-                <div className="flex gap-5 text-center">
-                    <Link
-                        to="/signin"
-                        className="p-3 text-lg border-2 font-semibold rounded-4xl hover:cursor-pointer w-1/2"
-                    >
-                        Sign In
-                    </Link>
+                <div className="flex flex-col items-center text-center">
                     <button
                         type="submit"
-                        className="p-3 text-lg border-2 font-semibold rounded-4xl hover:cursor-pointer w-1/2"
+                        className="p-3 text-lg border-2 font-semibold rounded-4xl hover:cursor-pointer w-full mb-4"
                     >
                         Sign Up
                     </button>
+                    <p className="text-sm">
+                        Already have an account?{" "}
+                        <Link
+                            to="/signin"
+                            className="font-semibold underline text-blue-600"
+                        >
+                            Sign In
+                        </Link>
+                    </p>
                 </div>
             </form>
         </div>

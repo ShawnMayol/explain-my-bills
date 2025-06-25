@@ -28,7 +28,9 @@ export default function LandingPage() {
         <div className="h-screen w-screen items-center flex flex-col justify-center">
             <div>
                 <p className="text-2xl mb-2 text-start">
-                    {user ? `Welcome Back, ${user.displayName || user.email}!` : "Welcome!"}
+                    {user
+                        ? `Welcome Back, ${user.displayName || user.email}!`
+                        : "Welcome!"}
                 </p>
                 <h1 className="text-7xl font-bold mb-14">Explain My Bills!</h1>
             </div>
