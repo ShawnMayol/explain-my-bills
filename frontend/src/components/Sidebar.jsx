@@ -25,17 +25,14 @@ export default function Sidebar() {
     };
 
     return (
-        <div className="w-1/5 min-w-[180px] border-r p-8 flex flex-col justify-between">
+        <div className="w-1/5 min-w-[180px] border-r border-r-black shadow-2xl p-8 flex flex-col justify-between bg-[#1E1F24] z-10">
             <div>
-                <div className="mb-10">
-                    <p className="font-bold text-sm">Explain My Bills!</p>
-                    <p className="text-xs text-gray-500">{today}</p>
+                <div className="mb-23 flex items-center space-x-5">
+                    <div className="w-10 h-10 bg-gray-100 rounded-full"></div>
+                    <p className="font-bold text-l">Explain My Bills!</p>
                 </div>
                 <div className="mb-10">
-                    <h2 className="text-xl font-semibold mb-10">
-                        Hello, {user?.displayName || user?.email || "User"}!
-                    </h2>
-                    <nav className="flex flex-col space-y-3">
+                    <nav className="flex flex-col space-y-5 text-yellow-300">
                         <Link
                             to="/dashboard"
                             className="font-semibold hover:underline"
@@ -71,7 +68,7 @@ export default function Sidebar() {
             </div>
             <button
                 onClick={handleLogout}
-                className="text-sm font-semibold underline text-left hover:cursor-pointer"
+                className="text-sm font-semibold text-left text-yellow-300 hover:cursor-pointer"
             >
                 Sign-out
             </button>
