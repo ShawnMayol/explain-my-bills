@@ -4,6 +4,12 @@
 # Firebase Firestore rules
 # firestore.rules
 
+# Backend
+venv
+__pycache__/
+*.pyc
+
+
 # Logs
 logs
 *.log

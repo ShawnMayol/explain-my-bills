@@ -6,6 +6,11 @@ import Dashboard from "./pages/Dashboard.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import NotFound from "./pages/NotFound.jsx";
+import EditUsername from "./pages/EditUsername.jsx";
+import ChangePassword from "./pages/ChangePassword.jsx";
+import BillSummarization from "./pages/BillSummarization.jsx";
+import BillAwaiting from "./pages/BillAwaiting.jsx";
+import BillResult from "./pages/BillResult.jsx";
 
 function App() {
     return (
@@ -26,6 +31,46 @@ function App() {
                 element={
                     <ProtectedRoute>
                         <ProfilePage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/profile/edit-username"
+                element={
+                    <ProtectedRoute>
+                        <EditUsername />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/profile/change-password"
+                element={
+                    <ProtectedRoute>
+                        <ChangePassword />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/bill/summarization"
+                element={
+                    <ProtectedRoute>
+                        <BillSummarization />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/bill/awaiting"
+                element={
+                    <ProtectedRoute>
+                        <BillAwaiting />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/bill/result"
+                element={
+                    <ProtectedRoute>
+                        <BillResult />
                     </ProtectedRoute>
                 }
             />
