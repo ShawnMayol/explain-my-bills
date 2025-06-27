@@ -21,7 +21,7 @@ export default function Dashboard() {
                             <div className="flex flex-col justify-between flex-1 p-1">
                                 <div>
                                     <p className="mt-2 font-semibold text-sm text-center">Meralco Bill</p>
-                                    <p className="mt-3 text-[10px] text-gray-300 text-justify hyphens-auto mt-1">
+                                    <p className="mt-3 text-[10px] text-gray-300 text-justify hyphens-auto">
                                         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
                                     </p>
                                 </div>
