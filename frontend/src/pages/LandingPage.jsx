@@ -40,7 +40,7 @@ export default function LandingPage() {
                             to="/dashboard"
                             className="rounded-xl p-3 text-lg border-2 font-semibold mr-10 px-12 hover:cursor-pointer"
                         >
-                            Home
+                            Dashboard
                         </Link>
                         <button
                             onClick={handleLogout}

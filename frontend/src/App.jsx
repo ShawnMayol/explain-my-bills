@@ -5,6 +5,7 @@ import SignIn from "./pages/SignIn.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import NotFound from "./pages/NotFound.jsx";
 
 function App() {
     return (
@@ -28,6 +29,7 @@ function App() {
                     </ProtectedRoute>
                 }
             />
+            <Route path="*" element={<NotFound />} />
         </Routes>
     );
 }
