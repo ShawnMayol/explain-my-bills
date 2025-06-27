@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { auth } from "../../firebase/firebaseConfig";
 import { signOut } from "firebase/auth";
 import { useAuth } from "../context/AuthContext";
@@ -36,21 +36,36 @@ export default function Sidebar() {
                         Hello, {user?.displayName || user?.email || "User"}!
                     </h2>
                     <nav className="flex flex-col space-y-3">
-                        <a href="#" className="font-semibold hover:underline">
+                        <Link
+                            to="/dashboard"
+                            className="font-semibold hover:underline"
+                        >
                             Home
-                        </a>
-                        <a href="#" className="font-semibold hover:underline">
+                        </Link>
+                        <Link
+                            to="/analytics"
+                            className="font-semibold hover:underline"
+                        >
                             Analytics
-                        </a>
-                        <a href="#" className="font-semibold hover:underline">
+                        </Link>
+                        <Link
+                            to="/notifications"
+                            className="font-semibold hover:underline"
+                        >
                             Notifications
-                        </a>
-                        <a href="#" className="font-semibold hover:underline">
+                        </Link>
+                        <Link
+                            to="/bills"
+                            className="font-semibold hover:underline"
+                        >
                             Bills
-                        </a>
-                        <a href="#" className="font-semibold hover:underline">
+                        </Link>
+                        <Link
+                            to="/profile"
+                            className="font-semibold hover:underline"
+                        >
                             Profile
-                        </a>
+                        </Link>
                     </nav>
                 </div>
             </div>
