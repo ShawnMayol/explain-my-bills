@@ -1,5 +1,6 @@
 import React from "react";
 import Sidebar from "../components/Sidebar";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
     return (
@@ -28,9 +29,12 @@ export default function Dashboard() {
                     ))}
                 </div>
 
-                <button className="absolute bottom-10 right-10 px-6 py-3 border-2 font-semibold rounded-full hover:bg-gray-100">
+                <Link
+                    to="/bill/summarization"
+                    className="absolute bottom-10 right-10 px-6 py-3 border-2 font-semibold rounded-full hover:bg-gray-100 text-center"
+                >
                     + Upload your Bill
-                </button>
+                </Link>
             </div>
         </div>
     );
