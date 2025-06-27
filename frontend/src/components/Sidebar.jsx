@@ -33,7 +33,7 @@ export default function Sidebar() {
                 </div>
                 <div className="mb-10">
                     <h2 className="text-xl font-semibold mb-10">
-                        Hello, {user?.displayName || user?.email || "User"}!
+                        Hello, {user?.displayName || "User"}!
                     </h2>
                     <nav className="flex flex-col space-y-3">
                         <Link

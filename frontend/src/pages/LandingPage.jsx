@@ -27,7 +27,7 @@ export default function LandingPage() {
             <div>
                 <p className="text-2xl mb-2 text-start">
                     {user
-                        ? `Welcome Back, ${user.displayName || user.email}!`
+                        ? `Welcome Back, ${user.displayName}!`
                         : "Welcome!"}
                 </p>
                 <h1 className="text-7xl font-bold mb-14">Explain My Bills!</h1>
