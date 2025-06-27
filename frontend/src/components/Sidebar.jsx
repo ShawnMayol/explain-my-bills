@@ -29,7 +29,7 @@ export default function Sidebar() {
             <div>
                 <div className="mb-23 flex items-center space-x-5">
                     <div className="w-10 h-10 bg-gray-100 rounded-full"></div>
-                    <p className="font-bold text-l">Explain My Bills!</p>
+                    <p className="font-bold text-l text-white">Explain My Bills!</p>
                 </div>
                 <div className="mb-10">
                     <nav className="flex flex-col space-y-5 text-yellow-300">
