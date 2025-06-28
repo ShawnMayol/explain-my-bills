@@ -13,7 +13,6 @@ export default function BillAwaiting() {
         if (!file) {
             setError("No image file provided.");
             setLoading(false);
-            // Redirect to BillSummarization after 1.5s
             setTimeout(() => navigate("/bill/summarization"), 1500);
             return;
         }
@@ -58,19 +57,19 @@ export default function BillAwaiting() {
     }, [location, navigate]);
 
     return (
-        <div className="flex h-screen w-screen">
-            <Sidebar />
-            <div className="flex-1 flex flex-col items-center justify-center bg-white">
+        <div className="flex h-screen w-screen bg-[#1B1C21] text-white">
+            {/* <Sidebar /> */}
+            <div className="flex-1 flex flex-col items-center justify-center">
                 <div className="w-full max-w-2xl flex flex-col items-center">
-                    <h2 className="text-lg text-gray-500 mb-2 font-semibold">
+                    <h2 className="text-lg text-yellow-300 mb-2 font-semibold">
                         Fetching Results
                     </h2>
-                    <div className="bg-white rounded-lg flex flex-col items-center justify-center w-[400px] h-[300px] border shadow">
+                    <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl flex flex-col items-center justify-center w-[400px] h-[300px] shadow-2xl">
                         {loading && !error && (
                             <>
                                 {/* Spinner */}
                                 <svg
-                                    className="animate-spin h-12 w-12 text-gray-400 mb-4"
+                                    className="animate-spin h-12 w-12 text-yellow-300 mb-4"
                                     viewBox="0 0 24 24"
                                 >
                                     <circle
@@ -88,8 +87,8 @@ export default function BillAwaiting() {
                                         d="M4 12a8 8 0 018-8v8z"
                                     />
                                 </svg>
-                                <span className="text-2xl font-bold text-gray-700">
-                                    Awaiting Results
+                                <span className="text-2xl font-bold text-white">
+                                    Please Wait...
                                 </span>
                             </>
                         )}
@@ -99,7 +98,7 @@ export default function BillAwaiting() {
                                     {error}
                                 </div>
                                 <button
-                                    className="mt-6 px-4 py-2 rounded bg-blue-600 text-white font-semibold"
+                                    className="mt-6 px-4 py-2 border-2 border-white rounded-full text-white font-semibold hover:bg-yellow-300 hover:text-black transition cursor-pointer"
                                     onClick={() =>
                                         navigate("/bill/summarization")
                                     }

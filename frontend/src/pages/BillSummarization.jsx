@@ -50,71 +50,85 @@ export default function BillSummarization() {
     };
 
     return (
-        <div className="flex h-screen w-screen">
+        <div className="flex h-screen w-screen bg-[#1B1C21] text-white overflow-y-auto">
             <Sidebar />
-            <div className="flex-1 flex flex-col items-center justify-center bg-white">
-                <div className="w-full max-w-4xl">
-                    <h1 className="text-3xl font-bold mb-2">
+            <main className="ml-[20%] flex-1 flex flex-col justify-center min-h-screen px-8 py-12">
+                <div className="w-full max-w-6xl mx-auto">
+                    <h1 className="text-3xl font-bold mb-2 text-yellow-300">
                         Bill Summarization
                     </h1>
-                    <hr className="mb-8 border-t-2 border-gray-200" />
-                    <p className="mb-2 text-gray-500 font-semibold">
-                        Upload Bill
-                    </p>
-                    <ul className="mb-4 text-sm text-gray-600 list-disc list-inside">
-                        <li>Only clear, readable images (JPG, PNG, JPEG).</li>
-                        <li>Maximum file size: 5MB.</li>
-                        <li>
-                            Make sure your bill is flat and not folded for best
-                            results.
-                        </li>
-                    </ul>
-                    <div
-                        className="w-[400px] h-[300px] bg-gray-100 border rounded-lg flex items-center justify-center text-gray-400 text-2xl font-bold cursor-pointer mb-6 outline-none focus:ring-2 focus:ring-blue-300"
-                        onClick={() => fileInputRef.current.click()}
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ")
-                                fileInputRef.current.click();
-                        }}
-                        role="button"
-                        aria-label="Upload bill image"
-                    >
-                        {previewUrl ? (
-                            <img
-                                src={previewUrl}
-                                alt="Bill preview"
-                                className="object-contain h-full rounded"
+                    <hr className="mb-8 border-t-2 border-gray-200/50" />
+                    <div className="flex flex-col md:flex-row gap-16">
+                        {/* Info and Instructions */}
+                        <section className="flex-1 mb-8 md:mb-0">
+                            <p className="mb-4 text-gray-300 font-semibold text-lg">
+                                Upload Bill
+                            </p>
+                            <ul className="mb-8 text-base text-gray-400 list-disc list-inside leading-relaxed">
+                                <li>
+                                    Only clear, readable images (JPG, PNG,
+                                    JPEG).
+                                </li>
+                                <li>Maximum file size: 5MB.</li>
+                                <li>
+                                    Make sure your bill is flat and not folded
+                                    for best results.
+                                </li>
+                            </ul>
+                            {error && (
+                                <div className="text-red-500 mb-2">{error}</div>
+                            )}
+                        </section>
+
+                        {/* Upload Area */}
+                        <section className="flex-1 flex flex-col items-center">
+                            <div
+                                className="w-[480px] max-w-full h-[370px] bg-zinc-900 border-2 border-white rounded-2xl flex items-center justify-center text-gray-400 text-2xl font-bold cursor-pointer mb-6 outline-none focus:ring-2 focus:ring-yellow-300 transition"
+                                onClick={() => fileInputRef.current.click()}
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ")
+                                        fileInputRef.current.click();
+                                }}
+                                role="button"
+                                aria-label="Upload bill image"
+                            >
+                                {previewUrl ? (
+                                    <img
+                                        src={previewUrl}
+                                        alt="Bill preview"
+                                        className="object-contain h-full max-w-full rounded"
+                                    />
+                                ) : (
+                                    <span>
+                                        Click or tap here
+                                        <br />
+                                        to upload your bill
+                                    </span>
+                                )}
+                            </div>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                accept="image/png, image/jpeg, image/jpg"
+                                className="hidden"
                             />
-                        ) : (
-                            <span>
-                                Click or tap here
-                                <br />
-                                to upload your bill
-                            </span>
-                        )}
+                            <button
+                                onClick={handleUpload}
+                                disabled={!selectedFile}
+                                className={`mt-2 px-10 py-3 border-2 border-white font-semibold rounded-full text-lg text-white transition ${
+                                    selectedFile
+                                        ? "hover:bg-yellow-300 hover:text-black hover:cursor-pointer"
+                                        : "bg-gray-600 cursor-not-allowed border-gray-600"
+                                }`}
+                            >
+                                Upload Bill
+                            </button>
+                        </section>
                     </div>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        accept="image/png, image/jpeg, image/jpg"
-                        className="hidden"
-                    />
-                    {error && <div className="text-red-500 mb-2">{error}</div>}
-                    <button
-                        onClick={handleUpload}
-                        disabled={!selectedFile}
-                        className={`mt-2 px-8 py-2 border font-semibold rounded-full transition ${
-                            selectedFile
-                                ? "hover:bg-gray-100"
-                                : "bg-gray-200 cursor-not-allowed"
-                        }`}
-                    >
-                        Upload Bill
-                    </button>
                 </div>
-            </div>
+            </main>
         </div>
     );
 }
