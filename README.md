@@ -1,5 +1,24 @@
 # Explain My Bills!
 
+---
+
+## To-Do List
+
+- [ ] Explain My Bills icon
+- [ ] Re-summarize button on bill result page
+- [ ] Report wrong summarization on bill result button on result page?
+- [ ] Analytics page
+- [ ] Notifications page
+- [ ] Bills page
+- [ ] Limit max recent summarized bills on Dashboard (implement pagination or just limit max)
+- [ ] Sort feature on Dashboard?
+- [ ] Implement forgot password
+- [ ] Further UI enhancements
+- [ ] Better error field for SignIn and SignUp
+- [ ] Show and hide password feature
+
+---
+
 **Bill Summarizer and Tracker** – making confusing bills easy to understand.
 
 ---
