@@ -12,14 +12,12 @@ export default function ChangePassword() {
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    // For form fields
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
-    // Detect if user signed in with Google
     const isGoogle = user?.providerData.some(
         (p) => p.providerId === "google.com"
     );
@@ -50,13 +48,11 @@ export default function ChangePassword() {
         }
 
         try {
-            // Re-authenticate first (Firebase requires this for sensitive operations)
             const credential = EmailAuthProvider.credential(
                 user.email,
                 oldPassword
             );
             await reauthenticateWithCredential(user, credential);
-            // Update password
             await updatePassword(user, newPassword);
             setSuccess("Password changed successfully!");
             setTimeout(() => navigate("/profile"), 1000);
@@ -70,9 +66,11 @@ export default function ChangePassword() {
     };
 
     return (
-        <div className="h-screen w-screen flex flex-col items-center justify-center">
-            <div className="bg-white px-12 py-10 rounded-lg flex flex-col items-center min-w-[400px] shadow">
-                <h1 className="text-3xl font-bold mb-8">Change Password</h1>
+        <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#1B1C21] text-white">
+            <div className="bg-white/10 backdrop-blur-lg border border-white/20 px-12 py-10 rounded-3xl flex flex-col items-center min-w-[400px] shadow-2xl">
+                <h1 className="text-3xl font-bold mb-8 text-yellow-300">
+                    Change Password
+                </h1>
                 <form
                     onSubmit={handleSubmit}
                     className="flex flex-col items-center gap-5 w-full"
@@ -88,7 +86,7 @@ export default function ChangePassword() {
                                 type="password"
                                 value={oldPassword}
                                 onChange={(e) => setOldPassword(e.target.value)}
-                                className="w-full border rounded p-2 text-center text-lg"
+                                className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
                                 placeholder="Old Password"
                                 autoComplete="current-password"
                             />
@@ -96,7 +94,7 @@ export default function ChangePassword() {
                                 type="password"
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
-                                className="w-full border rounded p-2 text-center text-lg"
+                                className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
                                 placeholder="New Password"
                                 autoComplete="new-password"
                             />
@@ -106,7 +104,7 @@ export default function ChangePassword() {
                                 onChange={(e) =>
                                     setConfirmNewPassword(e.target.value)
                                 }
-                                className="w-full border rounded p-2 text-center text-lg"
+                                className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
                                 placeholder="Confirm New Password"
                                 autoComplete="new-password"
                             />
@@ -114,26 +112,38 @@ export default function ChangePassword() {
                     )}
 
                     <div className="flex gap-4 mt-2">
-                        <button
-                            type="button"
-                            onClick={() => navigate("/profile")}
-                            className="border rounded-full px-7 py-2 font-semibold hover:bg-gray-50 transition"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={isGoogle}
-                            className="border rounded-full px-7 py-2 font-semibold hover:bg-gray-50 transition"
-                        >
-                            Confirm
-                        </button>
+                        {isGoogle ? (
+                            <button
+                                type="button"
+                                onClick={() => navigate("/profile")}
+                                className="border-2 border-white rounded-full px-7 py-2 font-semibold text-white hover:bg-yellow-300 hover:text-black transition hover:cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                        ) : (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => navigate("/profile")}
+                                    className="border-2 border-white rounded-full px-7 py-2 font-semibold text-white hover:bg-yellow-300 hover:text-black transition hover:cursor-pointer"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isGoogle}
+                                    className="border-2 border-white rounded-full px-7 py-2 font-semibold text-white hover:bg-yellow-300 hover:text-black transition hover:cursor-pointer"
+                                >
+                                    Confirm
+                                </button>
+                            </>
+                        )}
                     </div>
                     {error && (
                         <div className="text-red-500 text-sm mt-2">{error}</div>
                     )}
                     {success && (
-                        <div className="text-green-600 text-sm mt-2">
+                        <div className="text-green-400 text-sm mt-2">
                             {success}
                         </div>
                     )}

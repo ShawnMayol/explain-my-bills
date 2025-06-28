@@ -31,9 +31,11 @@ export default function EditUsername() {
     };
 
     return (
-        <div className="h-screen w-screen flex flex-col items-center justify-center">
-            <div className="bg-white px-12 py-10 rounded-lg flex flex-col items-center min-w-[400px] shadow">
-                <h1 className="text-3xl font-bold mb-8">Edit Username</h1>
+        <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#1B1C21] text-white">
+            <div className="bg-white/10 backdrop-blur-lg border border-white/20 px-12 py-10 rounded-3xl flex flex-col items-center min-w-[400px] shadow-2xl">
+                <h1 className="text-3xl font-bold mb-8 text-yellow-300">
+                    Edit Username
+                </h1>
                 <form
                     onSubmit={handleSubmit}
                     className="flex flex-col items-center gap-5 w-full"
@@ -42,20 +44,20 @@ export default function EditUsername() {
                         type="text"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="w-full border rounded p-2 text-center text-lg"
+                        className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
                         placeholder="Enter new username"
                     />
                     <div className="flex gap-4 mt-2">
                         <button
                             type="button"
                             onClick={() => navigate("/profile")}
-                            className="border rounded-full px-7 py-2 font-semibold hover:bg-gray-50 transition"
+                            className="border-2 border-white rounded-full px-7 py-2 font-semibold text-white hover:bg-yellow-300 hover:text-black transition hover:cursor-pointer"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="border rounded-full px-7 py-2 font-semibold hover:bg-gray-50 transition"
+                            className="border-2 border-white rounded-full px-7 py-2 font-semibold text-white hover:bg-yellow-300 hover:text-black transition hover:cursor-pointer"
                         >
                             Save
                         </button>
@@ -64,7 +66,7 @@ export default function EditUsername() {
                         <div className="text-red-500 text-sm mt-2">{error}</div>
                     )}
                     {success && (
-                        <div className="text-green-600 text-sm mt-2">
+                        <div className="text-green-400 text-sm mt-2">
                             {success}
                         </div>
                     )}

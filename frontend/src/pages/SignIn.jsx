@@ -48,58 +48,72 @@ export default function SignIn() {
     };
 
     return (
-        <div className="h-screen w-screen items-center flex flex-col justify-center">
-            <p className="text-2xl mb-2">Explain My Bills!</p>
-            <h1 className="text-7xl font-bold">Login</h1>
+        <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#1B1C21] text-white">
+            <div className="absolute right-1/6 top-1/6 w-[350px] h-[350px] rounded-full bg-gray-100 opacity-10 blur-3xl pointer-events-none z-0"></div>
+            <div className="absolute left-1/4 bottom-1/6 w-[150px] h-[150px] rounded-full bg-gray-100 opacity-10 blur-3xl pointer-events-none z-0"></div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col mt-10 w-1/4">
+            <div className="mb-6">
+                <p className="text-2xl mb-2 text-yellow-300 font-semibold text-center">
+                    Explain My Bills!
+                </p>
+                <h1 className="text-6xl font-bold text-center">Login</h1>
+            </div>
+
+            <form
+                onSubmit={handleSubmit}
+                className="flex flex-col w-full max-w-md p-10 rounded-3xl shadow-2xl backdrop-blur-md bg-white/10 border border-white/20 z-10"
+            >
                 <input
                     type="email"
                     placeholder="Email"
-                    className="mb-5 p-2 border rounded"
+                    className="mb-5 p-3 rounded-xl bg-zinc-900 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
                 />
                 <input
                     type="password"
                     placeholder="Password"
-                    className="mb-5 p-2 border rounded"
+                    className="mb-5 p-3 rounded-xl bg-zinc-900 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                 />
 
-                {error && <p className="text-red-500 mb-4">{error}</p>}
+                {error && (
+                    <p className="text-red-500 mb-4 text-center">{error}</p>
+                )}
 
                 <div className="flex flex-col items-center text-center">
                     <button
                         type="submit"
-                        className="p-3 text-lg border-2 font-semibold rounded-4xl hover:cursor-pointer w-full mb-4"
+                        className="p-3 text-lg border-2 border-white text-white font-semibold rounded-xl hover:bg-gray-100 hover:text-black transition w-full mb-4 hover:cursor-pointer"
                     >
                         Sign In
                     </button>
 
                     <div className="flex items-center w-full mb-4">
-                        <hr className="flex-grow border-t border-gray-300" />
-                        <span className="mx-4 text-gray-500 font-medium text-sm">
+                        <hr className="flex-grow border-t border-gray-400" />
+                        <span className="mx-4 text-gray-400 font-medium text-sm">
                             OR
                         </span>
-                        <hr className="flex-grow border-t border-gray-300" />
+                        <hr className="flex-grow border-t border-gray-400" />
                     </div>
 
                     <button
                         type="button"
                         onClick={handleGoogleSignIn}
-                        className="flex items-center justify-center gap-3 p-3 text-lg border-2 font-semibold rounded-4xl hover:cursor-pointer w-full mb-6"
+                        className="flex items-center justify-center gap-3 p-3 text-lg border-2 border-white text-white font-semibold rounded-xl hover:bg-gray-100 hover:text-black transition w-full mb-6 hover:cursor-pointer"
                     >
                         <FcGoogle className="w-6 h-6" />
                         Continue with Google
                     </button>
 
-                    <p className="text-sm">
+                    <p className="text-sm text-gray-300">
                         Don’t have an account?{" "}
                         <Link
                             to="/signup"
-                            className="font-semibold underline text-blue-600"
+                            className="font-semibold underline text-yellow-300 hover:text-yellow-400 transition"
                         >
                             Sign Up
                         </Link>

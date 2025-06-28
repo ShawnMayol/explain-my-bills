@@ -40,7 +40,7 @@ export default function Dashboard() {
       <div className="absolute left-90 -top-30 w-160 h-160 rounded-full bg-gray-100 opacity-8 blur-3xl pointer-events-none z-0"></div>
       <div className="absolute -right-20 -bottom-40 w-90 h-90 rounded-full bg-gray-100 opacity-8 blur-3xl pointer-events-none z-0"></div>
 
-      <div className="flex-1 p-10 relative overflow-y-auto">
+      <div className="ml-[20%] flex-1 p-10 relative overflow-y-auto">
         <h1 className="text-3xl text-yellow-300 font-bold mt-15 mb-8">Recent Summarized Bills</h1>
 
         <div className="grid grid-cols-3 gap-3">
