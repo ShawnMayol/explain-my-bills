@@ -35,27 +35,27 @@ export default function Sidebar() {
     const links = [
         {
             to: "/dashboard",
-            icon: <HiOutlineHome className="w-6 h-6 mr-3" />,
+            icon: <HiOutlineHome className="w-5 h-5 mr-3" />,
             label: "Home",
         },
         {
             to: "/analytics",
-            icon: <HiOutlineChartBar className="w-6 h-6 mr-3" />,
+            icon: <HiOutlineChartBar className="w-5 h-5 mr-3" />,
             label: "Analytics",
         },
         {
             to: "/notifications",
-            icon: <HiOutlineBell className="w-6 h-6 mr-3" />,
+            icon: <HiOutlineBell className="w-5 h-5 mr-3" />,
             label: "Notifications",
         },
         {
             to: "/bills",
-            icon: <HiOutlineDocumentText className="w-6 h-6 mr-3" />,
+            icon: <HiOutlineDocumentText className="w-5 h-5 mr-3" />,
             label: "Bills",
         },
         {
             to: "/profile",
-            icon: <HiOutlineUserCircle className="w-6 h-6 mr-3" />,
+            icon: <HiOutlineUserCircle className="w-5 h-5 mr-3" />,
             label: "Profile",
         },
     ];
@@ -70,11 +70,11 @@ export default function Sidebar() {
                     </span>
                 </div>
                 {user && (
-                    <div className="ml-1 mb-1 text-md text-white font-semibold">
+                    <div className="ml-1 mb-1 text-lg text-white font-semibold">
                         Hello, {user.displayName ? user.displayName : "User"}!
                     </div>
                 )}
-                <div className="ml-1 mb-2 text-xs text-gray-400">{today}</div>
+                <div className="ml-1 mb-2 text-sm text-gray-400">{today}</div>
             </div>
 
             {/* Nav Links */}
@@ -85,7 +85,7 @@ export default function Sidebar() {
                         key={to}
                         end // Makes exact match
                         className={({ isActive }) =>
-                            `flex items-center py-2 px-3 rounded-lg transition font-semibold
+                            `flex items-center py-2 px-3 rounded-lg text-sm transition font-semibold
                             ${
                                 isActive
                                     ? "bg-yellow-300 text-black shadow"
