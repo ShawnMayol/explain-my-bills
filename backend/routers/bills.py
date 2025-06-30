@@ -35,6 +35,7 @@ class BillResponse(BaseModel):
     explanation: str
     highlights: list[str]
     discrepancies: str
+    isValidBill: bool
 
 class BillTimeSeriesResponse(BaseModel):
     summary: str
@@ -69,6 +70,7 @@ async def bill_read(prompt_img: UploadFile = File(...)):
                     "previous_balance": 0.00
                 ],
                 "discrepancies": "None"
+                "isValidBill": true
             }
         """
 
