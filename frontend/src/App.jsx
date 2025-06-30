@@ -11,6 +11,7 @@ import ChangePassword from "./pages/ChangePassword.jsx";
 import BillSummarization from "./pages/BillSummarization.jsx";
 import BillAwaiting from "./pages/BillAwaiting.jsx";
 import BillResult from "./pages/BillResult.jsx";
+import AnalyticsPage from "./pages/AnalyticsPage.jsx";
 
 function App() {
     return (
@@ -71,6 +72,14 @@ function App() {
                 element={
                     <ProtectedRoute>
                         <BillResult />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/analytics"
+                element={
+                    <ProtectedRoute>
+                        <AnalyticsPage />
                     </ProtectedRoute>
                 }
             />
