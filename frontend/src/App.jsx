@@ -13,6 +13,7 @@ import BillAwaiting from "./pages/BillAwaiting.jsx";
 import BillResult from "./pages/BillResult.jsx";
 import AnalyticsPage from "./pages/AnalyticsPage.jsx";
 import NotificationsPage from "./pages/NotificationsPage.jsx";
+import BillsPage from "./pages/BillsPage.jsx";
 
 function App() {
     return (
@@ -89,6 +90,14 @@ function App() {
                 element={
                     <ProtectedRoute>
                         <NotificationsPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/bills"
+                element={
+                    <ProtectedRoute>
+                        <BillsPage />
                     </ProtectedRoute>
                 }
             />
