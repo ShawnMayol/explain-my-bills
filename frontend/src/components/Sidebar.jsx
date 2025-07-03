@@ -64,7 +64,9 @@ export default function Sidebar() {
         <aside className="fixed top-0 left-0 h-screen w-1/5 min-w-[180px] border-r border-r-black shadow-2xl px-4 py-8 flex flex-col bg-[#1E1F24] z-20">
             <div className="flex flex-col items-start mb-10">
                 <div className="flex items-center mb-10">
-                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black font-extrabold text-2xl shadow"></div>
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-black font-extrabold text-2xl shadow">
+                        <img src="src/assets/logo.svg" alt="Explain My Bills Logo" />
+                    </div>
                     <span className="ml-4 text-xl font-extrabold text-yellow-300 tracking-wide drop-shadow">
                         Explain My Bills!
                     </span>
