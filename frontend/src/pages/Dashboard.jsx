@@ -45,7 +45,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-3 gap-3">
           {bills.length > 0 ? (
-            bills.map((bill) => (
+            [ ...bills].reverse().map((bill) => (
               <div key={bill.id} className="border border-gray-600 rounded-lg p-2 flex bg-zinc-900">
                 {bill.imageUrl ? (
                   <img
