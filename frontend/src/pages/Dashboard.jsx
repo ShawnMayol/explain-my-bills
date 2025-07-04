@@ -2,37 +2,99 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
 import { getAuth } from "firebase/auth";
-import { collection, getDocs } from "firebase/firestore";
+import { 
+  orderBy, 
+  limit, 
+  startAfter, 
+  endBefore, 
+  collection, 
+  getDocs, 
+  query,
+  getCountFromServer
+} from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
 
 export default function Dashboard() {
+  const PAGE_SIZE = 9;
+
   const [bills, setBills] = useState([]);
+  const [pageCursors, setPageCursors] = useState([null]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  const initCount = async () => {
+    if (!user) return;
+    const colRef = collection(db, "users", user.uid, "bills");
+    const countSnap = await getCountFromServer(colRef);
+    const count = countSnap.data().count;
+    setTotalPages(Math.max(1, Math.ceil(count / PAGE_SIZE)));
+  }
+
+  const goToPage = async (pageNum) => {
+    if (!user || pageNum < 1 || pageNum > totalPages) return;
+
+    let q = query(
+      collection(db, "users", user.uid, "bills"),
+      orderBy("createdAt", "desc"),
+      limit(PAGE_SIZE)
+    );
+
+    const cursor = pageCursors[pageNum - 1];
+    if (cursor) q = query(q, startAfter(cursor));
+
+    const snap = await getDocs(q);
+    const docs = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    setBills(docs);
+
+    const lastDoc = snap.docs[snap.docs.length - 1] || null;
+    setPageCursors((prev) => {
+      const next = [ ...prev];
+      next[pageNum] = lastDoc;
+      return next;
+    })
+
+    setCurrentPage(pageNum);
+  }
+
+  const getPageList = () => {
+    const delta = 1;
+    let start = Math.max(1, currentPage - delta);
+    let end = Math.min(totalPages, currentPage + delta);
+    const range = [];
+
+    for (let i = start; i <= end; i++) range.push(i);
+
+    if (start > 2) {
+      range.unshift("...");
+      range.unshift(1);
+    } else if (start === 2) {
+      range.unshift(1);
+    }
+
+    if (end < totalPages - 1) {
+      range.push("...");
+      range.push(totalPages);
+    } else if (end === totalPages - 1) {
+      range.push(totalPages);
+    }
+
+    return range;
+  }
 
   useEffect(() => {
-    const fetchBills = async () => {
-      const auth = getAuth();
-      const user = auth.currentUser;
+    if (!user) {
+      console.warn("User not logged in");
+      return;
+    }
 
-      if (!user) {
-        console.warn("User not logged in");
-        return;
-      }
+    initCount().then(() => goToPage(1));
+  }, [user]);
 
-      try {
-        const billsRef = collection(db, "users", user.uid, "bills");
-        const snapshot = await getDocs(billsRef);
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setBills(data);
-      } catch (error) {
-        console.error("Error fetching bills:", error);
-      }
-    };
-
-    fetchBills();
-  }, []);
+  const isFirst = currentPage === 1;
+  const isLast = currentPage === totalPages;
 
   return (
     <div className="relative flex h-screen w-screen bg-[#1B1C21] text-white overflow-hidden">
@@ -41,11 +103,49 @@ export default function Dashboard() {
       <div className="absolute -right-20 -bottom-40 w-90 h-90 rounded-full bg-gray-100 opacity-8 blur-3xl pointer-events-none z-0"></div>
 
       <div className="ml-[20%] flex-1 p-10 relative overflow-y-auto">
-        <h1 className="text-3xl text-yellow-300 font-bold mt-15 mb-8">Recent Summarized Bills</h1>
+        <h1 className="text-3xl text-yellow-300 font-bold mt-15 mb-10">Recent Summarized Bills</h1>
+
+        <div className="flex gap-1 mb-2">
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={isFirst}
+            className="px-3 py-1 text-sm border rounded disabled:opacity-50 hover:bg-gray-700"
+          >
+            Prev
+          </button>
+
+          {getPageList().map((p, idx) =>
+            p === "..." ? (
+              <span key={`el-${idx}`} className="px-2">
+                ...
+              </span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => goToPage(p)}
+                className={`px-3 py-1 text-sm border rounded ${
+                  p === currentPage
+                    ? "bg-yellow-300 text-black"
+                    : "hover:bg-gray-700"
+                }`}
+              >
+                {p}
+              </button>
+            )
+          )}
+
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={isLast}
+            className="px-3 py-1 text-sm border rounded disabled:opacity-50 hover:bg-gray-700"
+          >
+            Next
+          </button>
+        </div>
 
         <div className="grid grid-cols-3 gap-3">
           {bills.length > 0 ? (
-            [ ...bills].reverse().map((bill) => (
+            bills.map((bill) => (
               <div key={bill.id} className="border border-gray-600 rounded-lg p-2 flex bg-zinc-900">
                 {bill.imageUrl ? (
                   <img
