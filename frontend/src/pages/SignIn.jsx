@@ -48,27 +48,27 @@ export default function SignIn() {
     };
 
     return (
-        <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#1B1C21] text-white">
+        <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#1B1C21] text-white px-4">
             <div className="absolute right-1/6 top-1/6 w-[350px] h-[350px] rounded-full bg-gray-100 opacity-10 blur-3xl pointer-events-none z-0"></div>
             <div className="absolute left-1/4 bottom-1/6 w-[150px] h-[150px] rounded-full bg-gray-100 opacity-10 blur-3xl pointer-events-none z-0"></div>
 
-            <div className="mb-6">
-                <p className="text-2xl mb-2 text-yellow-300 font-semibold text-center">
+            <div className="mb-6 text-center">
+                <p className="text-lg md:text-xl mb-2 text-yellow-300 font-semibold">
                     Explain My Bills!
                 </p>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-center">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold">
                     Login
                 </h1>
             </div>
 
             <form
                 onSubmit={handleSubmit}
-                className="flex flex-col  sm:max-w-sm p-8 sm:p-10 rounded-3xl shadow-2xl backdrop-blur-md bg-white/10 border border-white/20 z-10"
+                className="flex flex-col w-full max-w-[400px] p-6 md:p-8 rounded-3xl shadow-2xl backdrop-blur-md bg-white/10 border border-white/20 z-10"
             >
                 <input
                     type="email"
                     placeholder="Email"
-                    className="mb-5 p-3 rounded-xl bg-zinc-900 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                    className="mb-4 p-3 rounded-xl bg-zinc-900 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     autoComplete="email"
@@ -76,7 +76,7 @@ export default function SignIn() {
                 <input
                     type="password"
                     placeholder="Password"
-                    className="mb-5 p-3 rounded-xl bg-zinc-900 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                    className="mb-4 p-3 rounded-xl bg-zinc-900 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
