@@ -56,12 +56,14 @@ export default function SignIn() {
                 <p className="text-2xl mb-2 text-yellow-300 font-semibold text-center">
                     Explain My Bills!
                 </p>
-                <h1 className="text-6xl font-bold text-center">Login</h1>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-center">
+                    Login
+                </h1>
             </div>
 
             <form
                 onSubmit={handleSubmit}
-                className="flex flex-col w-full max-w-md p-10 rounded-3xl shadow-2xl backdrop-blur-md bg-white/10 border border-white/20 z-10"
+                className="flex flex-col  sm:max-w-sm p-8 sm:p-10 rounded-3xl shadow-2xl backdrop-blur-md bg-white/10 border border-white/20 z-10"
             >
                 <input
                     type="email"
