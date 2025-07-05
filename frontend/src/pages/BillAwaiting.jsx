@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
 
 export default function BillAwaiting() {
     const location = useLocation();
     const navigate = useNavigate();
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
+
+    const messages = ["Analyzing Bill", "Reading Bill", "Summarizing Bill"];
+
+    const [messageIndex, setMessageIndex] = useState(0);
+    const [dotCount, setDotCount] = useState(0);
 
     useEffect(() => {
         const file = location.state?.file;
@@ -56,15 +60,30 @@ export default function BillAwaiting() {
         };
     }, [location, navigate]);
 
+    useEffect(() => {
+        if (!loading) return;
+
+        const interval = setInterval(() => {
+            setMessageIndex((prev) => (prev + 1) % messages.length);
+        }, 3000);
+
+        const dotInterval = setInterval(() => {
+            setDotCount((prev) => (prev + 1) % 4);
+        }, 500);
+
+        return () => {
+            clearInterval(interval);
+            clearInterval(dotInterval);
+        };
+    }, [loading]);
+
+    const dots = ".".repeat(dotCount);
+
     return (
-        <div className="flex h-screen w-screen bg-[#1B1C21] text-white">
-            {/* <Sidebar /> */}
+        <div className="flex h-screen w-screen bg-[#1B1C21] text-white px-4">
             <div className="flex-1 flex flex-col items-center justify-center">
                 <div className="w-full max-w-2xl flex flex-col items-center">
-                    <h2 className="text-lg text-yellow-300 mb-2 font-semibold">
-                        Fetching Results
-                    </h2>
-                    <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl flex flex-col items-center justify-center w-[400px] h-[300px] shadow-2xl">
+                    <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl flex flex-col items-center justify-center w-full max-w-[400px] h-[300px] p-6 shadow-2xl">
                         {loading && !error && (
                             <>
                                 {/* Spinner */}
@@ -87,14 +106,15 @@ export default function BillAwaiting() {
                                         d="M4 12a8 8 0 018-8v8z"
                                     />
                                 </svg>
-                                <span className="text-2xl font-bold text-white">
-                                    Please Wait...
+                                <span className="text-lg md:text-2xl font-bold text-center text-white">
+                                    {messages[messageIndex]}
+                                    {dots}
                                 </span>
                             </>
                         )}
                         {error && (
                             <div className="flex flex-col items-center justify-center">
-                                <div className="text-red-500 mt-4 text-center">
+                                <div className="text-red-500 mt-4 text-center text-sm md:text-base">
                                     {error}
                                 </div>
                                 <button
