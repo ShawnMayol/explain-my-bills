@@ -8,8 +8,8 @@ import Sidebar from "../components/Sidebar";
 import { db } from "../../firebase/firebaseConfig";
 import { getAuth } from "firebase/auth";
 import { collection, doc, setDoc } from "firebase/firestore";
+import { HiOutlineMenu } from "react-icons/hi";
 
-// Custom hook for React Router v6 navigation blocking
 function usePrompt(message, shouldBlockRef) {
     const { navigator } = useContext(UNSAFE_NavigationContext);
 
@@ -35,8 +35,9 @@ export default function BillResult() {
     const file = location.state?.file;
 
     const [imgUrl, setImgUrl] = useState(null);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
 
-    // This ref controls whether blocking is enabled
     const shouldBlockRef = useRef(true);
 
     const promptMsg =
@@ -72,6 +73,14 @@ export default function BillResult() {
         };
     }, [billData, file, navigate]);
 
+    useEffect(() => {
+        const onScroll = () => {
+            setScrolled(window.scrollY > 20);
+        };
+        window.addEventListener("scroll", onScroll);
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
     const handleSave = async () => {
         const auth = getAuth();
         const user = auth.currentUser;
@@ -101,7 +110,7 @@ export default function BillResult() {
     const handleDelete = () => {
         if (window.confirm("Are you sure?")) {
             shouldBlockRef.current = false;
-            navigate("/dashboard");
+            window.location.assign("/dashboard"); 
         }
     };
 
@@ -120,9 +129,27 @@ export default function BillResult() {
         : "";
 
     return (
-        <div className="flex h-screen w-screen bg-[#1B1C21] text-white overflow-y-auto">
-            <Sidebar />
-            <main className="ml-[20%] flex-1 flex flex-col items-center px-10 py-12 min-h-screen">
+        <div className="flex min-h-screen w-full bg-[#1B1C21] text-white overflow-y-auto overflow-x-hidden relative">
+            <Sidebar
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
+            />
+
+            {/* Top Bar Mobile */}
+            <div
+                className={`fixed top-0 left-0 right-0 z-30 md:hidden flex items-center h-12 px-4 py-7 transition-colors duration-300 ${
+                    scrolled ? "bg-black/50" : "bg-black/10"
+                }`}
+            >
+                <button
+                    className="text-yellow-300 hover:text-white cursor-pointer ps-5"
+                    onClick={() => setSidebarOpen(true)}
+                >
+                    <HiOutlineMenu className="w-7 h-7" />
+                </button>
+            </div>
+
+            <main className="md:ml-[20%] flex-1 flex flex-col items-center px-4 md:px-10 py-12 min-h-screen mt-4">
                 <div className="w-full max-w-6xl">
                     <span className="mb-6 block text-yellow-300 font-semibold text-2xl">
                         Summarized Bill Result
@@ -130,7 +157,7 @@ export default function BillResult() {
                     <div className="flex flex-col md:flex-row gap-12">
                         {/* Image */}
                         <div className="flex-shrink-0 flex flex-col items-center">
-                            <div className="w-[340px] h-[400px] bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
+                            <div className="w-full max-w-[340px] h-[400px] bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
                                 {imgUrl ? (
                                     <img
                                         src={imgUrl}
@@ -150,13 +177,13 @@ export default function BillResult() {
                                     <b className="text-yellow-300">
                                         Bill Type:
                                     </b>{" "}
-                                    <span className="font-semibold">
+                                    <span className="font-semibold break-words">
                                         {billData.billType || "—"}
                                     </span>
                                 </div>
                                 <div>
                                     <b className="text-yellow-300">Issuer:</b>{" "}
-                                    <span className="font-semibold">
+                                    <span className="font-semibold break-words">
                                         {billData.issuer || "—"}
                                     </span>
                                 </div>
@@ -197,7 +224,7 @@ export default function BillResult() {
                                     Explanation:
                                 </b>
                                 <textarea
-                                    className="w-full border border-white/20 rounded bg-zinc-900 px-4 py-3 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-300 h-30"
+                                    className="w-full border border-white/20 rounded bg-zinc-900 px-4 py-3 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-300"
                                     value={billData.explanation || ""}
                                     readOnly
                                     rows={8}
@@ -213,7 +240,7 @@ export default function BillResult() {
                                     Highlights:
                                 </b>
                                 <textarea
-                                    className="w-full border border-white/20 rounded bg-zinc-900 px-4 py-3 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-300 h-30"
+                                    className="w-full border border-white/20 rounded bg-zinc-900 px-4 py-3 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-300"
                                     value={highlightStr}
                                     readOnly
                                     rows={8}
@@ -228,19 +255,19 @@ export default function BillResult() {
                                 <b className="text-yellow-300">
                                     Discrepancies:
                                 </b>{" "}
-                                <span className="font-semibold">
+                                <span className="font-semibold break-words">
                                     {billData.discrepancies || "None"}
                                 </span>
                             </div>
-                            <div className="flex gap-8 justify-end mt-6 mb-10">
+                            <div className="flex gap-4 md:gap-8 justify-end mt-6 mb-10 flex-wrap">
                                 <button
-                                    className="w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-yellow-300 hover:text-black transition cursor-pointer"
+                                    className="w-28 md:w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-yellow-300 hover:text-black transition cursor-pointer"
                                     onClick={handleSave}
                                 >
                                     Save
                                 </button>
                                 <button
-                                    className="w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-yellow-300 hover:text-black transition cursor-pointer"
+                                    className="w-28 md:w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-yellow-300 hover:text-black transition cursor-pointer"
                                     onClick={handleDelete}
                                 >
                                     Delete
