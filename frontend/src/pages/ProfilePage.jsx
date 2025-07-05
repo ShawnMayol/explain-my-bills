@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
+import { HiOutlineMenu } from "react-icons/hi";
 
 export default function ProfilePage() {
     const navigate = useNavigate();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const handleLogout = async () => {
         try {
@@ -18,11 +20,20 @@ export default function ProfilePage() {
 
     return (
         <div className="flex h-screen w-screen bg-[#1B1C21] text-white overflow-hidden relative">
-            {/* <div className="absolute -right-1/4 w-[950px] h-[950px] rounded-full bg-gray-100 opacity-2 blur-3xl pointer-events-none z-0"></div> */}
-            <Sidebar />
+            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-            <div className="ml-[20%] flex-1 flex flex-col items-center justify-center">
-                <div className="flex flex-col items-center gap-6 w-[350px]">
+            {/* Top Bar Mobile */}
+            <div className="absolute top-0 left-0 right-0 z-30 md:hidden bg-black/10 flex items-center h-12 px-4 py-7">
+                <button
+                    className="text-yellow-300 hover:text-white cursor-pointer ps-5"
+                    onClick={() => setSidebarOpen(true)}
+                >
+                    <HiOutlineMenu className="w-7 h-7" />
+                </button>
+            </div>
+
+            <div className="flex-1 flex flex-col items-center justify-center">
+                <div className="flex flex-col items-center gap-6 w-full max-w-[350px]">
                     <Link
                         to="/profile/edit-username"
                         className="w-full py-3 border-2 border-white rounded-full font-semibold text-white hover:bg-yellow-300 hover:text-black transition text-center"
