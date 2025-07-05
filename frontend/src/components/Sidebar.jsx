@@ -12,6 +12,7 @@ import {
     HiOutlineLogout,
     HiX,
 } from "react-icons/hi";
+import logo from "../assets/logo.svg";
 
 export default function Sidebar({ isOpen, onClose }) {
     const { user } = useAuth();
@@ -97,7 +98,7 @@ export default function Sidebar({ isOpen, onClose }) {
                     <div className="flex items-center mb-10">
                         <div className="w-12 h-12 rounded-full flex items-center justify-center text-black font-extrabold text-2xl shadow">
                             <img
-                                src="src/assets/logo.svg"
+                                src={logo}
                                 alt="Explain My Bills Logo"
                             />
                         </div>
