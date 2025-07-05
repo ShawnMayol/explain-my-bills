@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { HiOutlineMenu } from "react-icons/hi";
@@ -10,6 +10,7 @@ export default function BillSummarization() {
     const [previewUrl, setPreviewUrl] = useState("");
     const [error, setError] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
     const fileInputRef = useRef();
     const navigate = useNavigate();
 
@@ -49,15 +50,26 @@ export default function BillSummarization() {
         navigate("/bill/awaiting", { state: { file: selectedFile } });
     };
 
+    useEffect(() => {
+        const onScroll = () => {
+            setScrolled(window.scrollY > 20);
+        };
+        window.addEventListener("scroll", onScroll);
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
     return (
-        <div className="flex h-screen w-screen bg-[#1B1C21] text-white overflow-y-auto relative">
+        <div className="flex min-h-screen w-screen bg-[#1B1C21] text-white overflow-y-auto relative">
             <Sidebar
                 isOpen={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}
             />
 
-            {/* Top Bar Mobile */}
-            <div className="absolute top-0 left-0 right-0 z-30 md:hidden bg-black/10 flex items-center h-12 px-4 py-7">
+            <div
+                className={`fixed top-0 left-0 right-0 z-30 md:hidden flex items-center h-12 px-4 py-7 transition-colors duration-300 ${
+                    scrolled ? "bg-black/50" : "bg-black/10"
+                }`}
+            >
                 <button
                     className="text-yellow-300 hover:text-white cursor-pointer ps-5"
                     onClick={() => setSidebarOpen(true)}
@@ -66,14 +78,13 @@ export default function BillSummarization() {
                 </button>
             </div>
 
-            <main className="flex-1 flex flex-col justify-center min-h-screen px-4 sm:px-8">
+            <main className="md:ml-[20%] flex-1 flex flex-col justify-center min-h-screen px-4 md:px-10 mt-16 md:mt-0">
                 <div className="w-full max-w-6xl mx-auto">
                     <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-yellow-300">
                         Bill Summarization
                     </h1>
                     <hr className="mb-8 border-t-2 border-gray-200/50" />
                     <div className="flex flex-col md:flex-row gap-8 md:gap-16">
-                        {/* Info and Instructions */}
                         <section className="flex-1 mb-8 md:mb-0">
                             <p className="mb-4 text-gray-300 font-semibold text-lg">
                                 Upload Bill
@@ -94,7 +105,6 @@ export default function BillSummarization() {
                             )}
                         </section>
 
-                        {/* Upload Area */}
                         <section className="flex-1 flex flex-col items-center">
                             <div
                                 className="w-full max-w-[480px] h-[300px] sm:h-[370px] bg-zinc-900 border-2 border-white rounded-2xl flex items-center justify-center text-gray-400 text-xl sm:text-2xl font-bold cursor-pointer mb-6 outline-none focus:ring-2 focus:ring-yellow-300 transition"
