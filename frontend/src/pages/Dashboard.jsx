@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [pageCursors, setPageCursors] = useState([null]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   const auth = getAuth();
   const user = auth.currentUser;
@@ -33,30 +34,37 @@ export default function Dashboard() {
     setTotalPages(Math.max(1, Math.ceil(count / PAGE_SIZE)));
   }
 
-  const goToPage = async (pageNum) => {
+  const goToPage = async (pageNum, showLoader) => {
     if (!user || pageNum < 1 || pageNum > totalPages) return;
+    if (showLoader) setLoading(true);
 
-    let q = query(
-      collection(db, "users", user.uid, "bills"),
-      orderBy("createdAt", "desc"),
-      limit(PAGE_SIZE)
-    );
+    try {
+      let q = query(
+        collection(db, "users", user.uid, "bills"),
+        orderBy("createdAt", "desc"),
+        limit(PAGE_SIZE)
+      );
 
-    const cursor = pageCursors[pageNum - 1];
-    if (cursor) q = query(q, startAfter(cursor));
+      const cursor = pageCursors[pageNum - 1];
+      if (cursor) q = query(q, startAfter(cursor));
 
-    const snap = await getDocs(q);
-    const docs = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    setBills(docs);
+      const snap = await getDocs(q);
+      const docs = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setBills(docs);
 
-    const lastDoc = snap.docs[snap.docs.length - 1] || null;
-    setPageCursors((prev) => {
-      const next = [ ...prev];
-      next[pageNum] = lastDoc;
-      return next;
-    })
+      const lastDoc = snap.docs[snap.docs.length - 1] || null;
+      setPageCursors((prev) => {
+        const next = [...prev];
+        next[pageNum] = lastDoc;
+        return next;
+      });
 
-    setCurrentPage(pageNum);
+      setCurrentPage(pageNum);
+    } catch (err) {
+      console.error("Failed to load bills:", err);
+    } finally {
+      if (showLoader) setLoading(false);
+    }
   }
 
   const getPageList = () => {
@@ -90,7 +98,7 @@ export default function Dashboard() {
       return;
     }
 
-    initCount().then(() => goToPage(1));
+    initCount().then(() => goToPage(1, true));
   }, [user]);
 
   const isFirst = currentPage === 1;
@@ -144,8 +152,28 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          {bills.length > 0 ? (
-            bills.map((bill) => (
+          {loading
+            ? Array.from({ length: PAGE_SIZE }).map((_, i) => (
+              <div
+                key={i}
+                className="border border-gray-600 rounded-lg p-2 flex bg-zinc-900 animate-pulse"
+              >
+                <div className="w-32 h-36 bg-gray-700 rounded mr-4" />
+                <div className="flex-1 flex flex-col justify-between p-1">
+                  <div>
+                    <div className="mx-auto w-3/5 h-5 bg-gray-700 rounded" />
+                    <div className="space-y-1 mt-3">
+                      <div className="w-full h-4 bg-gray-700 rounded" />
+                      <div className="w-full h-4 bg-gray-700 rounded" />
+                      <div className="w-5/6 h-4 bg-gray-700 rounded" />
+                    </div>
+                  </div>
+                  <div className="h-4 bg-gray-700 rounded w-2/5 self-end mt-4" />
+                </div>
+              </div>
+            ))
+            : bills.length > 0
+            ? bills.map((bill) => (
               <div key={bill.id} className="border border-gray-600 rounded-lg p-2 flex bg-zinc-900">
                 {bill.imageUrl ? (
                   <img
@@ -172,11 +200,12 @@ export default function Dashboard() {
                 </div>
               </div>
             ))
-          ) : (
-            <p className="text-gray-400 col-span-2">
-              No bills found for this account.
-            </p>
-          )}
+            : (
+              <p className="text-gray-400 col-span-2">
+                No bills found for this account.
+              </p>
+            )
+          }
         </div>
 
         <Link
