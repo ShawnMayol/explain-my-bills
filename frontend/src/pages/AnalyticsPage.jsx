@@ -7,6 +7,7 @@ import { AnalyticsHeader } from "../components/AnalyticsHeader";
 import { ChartContainer } from "../components/ChartContainer";
 import { AnalyticsSummary } from "../components/AnalyticsSummary";
 import { AnnualExpenseCard } from "../components/AnnualExpenseCard";
+import { HiOutlineMenu } from "react-icons/hi";
 
 const CATEGORIES = [
   { label: "Utility", value: "utility" },
@@ -24,6 +25,7 @@ export default function AnalyticsPage() {
   const [selectedYear, setSelectedYear] = useState(null);
   const [isChartReady, setIsChartReady] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const user = UseAuth();
   const {
@@ -194,9 +196,24 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="flex h-screen w-screen bg-[#1B1C21] text-white">
-      <Sidebar />
-      <main className="ml-[20%] flex-1 flex flex-col px-14 py-10">
+    <div className="relative flex h-screen w-screen bg-[#1B1C21] text-white overflow-hidden">
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+
+      <div
+        className={`fixed top-0 left-0 right-0 z-30 md:hidden flex items-center h-12 px-4 py-7 transition-colors duration-300 bg-black/10`}
+      >
+        <button
+          className="text-yellow-300 hover:text-white cursor-pointer ps-5"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <HiOutlineMenu className="w-7 h-7" />
+        </button>
+      </div>
+
+      <main className="w-full md:ml-[20%] flex-1 flex flex-col px-4 md:px-14 py-10 mt-16 md:mt-0 overflow-y-auto">
         <AnalyticsHeader
           category={category}
           selectedYear={selectedYear}
@@ -212,7 +229,7 @@ export default function AnalyticsPage() {
           isLoading={isChartLoading}
         />
 
-        <div className="flex w-full gap-8">
+        <div className="flex flex-col md:flex-row w-full gap-4 md:gap-8">
           <AnalyticsSummary
             summary={summary}
             suggestion={suggestion}
