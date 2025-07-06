@@ -2,6 +2,8 @@ from fastapi import APIRouter, HTTPException, File, UploadFile
 from dotenv import load_dotenv
 import google.generativeai as genai
 from pydantic import BaseModel
+import logging
+import json
 
 import os
 import enum
@@ -17,6 +19,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+
 class BillType(enum.Enum):
     utility = "utility"
     telecom = "telecom"
@@ -26,6 +29,7 @@ class BillType(enum.Enum):
     subscription = "subscription"
     educational = "educational"
     others = "others"
+
 
 class BillResponse(BaseModel):
     billType: BillType
@@ -37,9 +41,19 @@ class BillResponse(BaseModel):
     discrepancies: str
     isValidBill: bool
 
+
 class BillTimeSeriesResponse(BaseModel):
     summary: str
     suggestion: str
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+class AnalyticsRequest(BaseModel):
+    time_series_data: str
+
 
 @router.post("/bill_reading")
 async def bill_read(prompt_img: UploadFile = File(...)):
@@ -89,50 +103,83 @@ async def bill_read(prompt_img: UploadFile = File(...)):
                                 "mime_type": prompt_img.content_type or "image/png",
                                 "data": img_bytes,
                             }
-                        }
-                    ]
+                        },
+                    ],
                 }
             ],
             generation_config={
                 "response_mime_type": "application/json",
                 "response_schema": BillResponse,
-            }
+            },
         )
 
         return {"response": response.text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gemini Error: {e}")
 
+
 @router.post("/analytics")
-async def analytics(time_series_data: str):
+async def analytics(request: AnalyticsRequest):
     """
     Analyzes user time series billing data to generate a summarized JSON response.
+    Expects a JSON body: {"time_series_data": "<string>"}
     """
     try:
-        dev_prompt = time_series_data + """
+        # Validate input
+        if not request.time_series_data:
+            raise HTTPException(
+                status_code=400, detail="time_series_data cannot be empty"
+            )
+
+        dev_prompt = (
+            request.time_series_data
+            + """
             \n
             Context: This time series data are the expenses or bills of a user in a particular type or category.
             Find me the key information from this time series data and summarize it. Format it into two paragraphs:
             one for the summary and the other for the suggestions.
 
-            The formatting will be as follows:
+            The formatting MUST be valid JSON as follows:
 
             {
                 "summary": "This is the summary of the time series data",
                 "suggestion": "This is the suggestion of the time series data"
             }
-        """
 
-        model = genai.GenerativeModel(model_name)
+            Ensure all strings are properly escaped and the output is valid JSON.
+        """
+        )
+
+        model = genai.GenerativeModel("gemini-1.5-flash")
         response = model.generate_content(
             dev_prompt,
             generation_config={
                 "response_mime_type": "application/json",
-                "response_schema": BillTimeSeriesResponse
-            }
+                # Remove response_schema to avoid potential enforcement issues
+            },
         )
 
-        return {"response": response.text}
+        # Log the raw response for debugging
+        logger.info(f"Gemini response: {response.text}")
+
+        # Attempt to parse and validate JSON
+        try:
+            json.loads(response.text)
+            return {"response": response.text}  # Valid JSON, return as-is
+        except json.JSONDecodeError as parse_err:
+            logger.error(
+                f"Invalid JSON from Gemini: {parse_err}, Response: {response.text}"
+            )
+            # Fallback response to ensure frontend receives valid JSON
+            return {
+                "response": json.dumps(
+                    {
+                        "summary": "Unable to generate summary due to invalid response from AI.",
+                        "suggestion": "Please try again or contact support.",
+                    }
+                )
+            }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Gemini Error: {e}")
+        logger.error(f"Gemini Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Gemini Error: {str(e)}")
