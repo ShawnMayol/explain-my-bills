@@ -12,7 +12,7 @@ import {
     getCountFromServer,
 } from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
-import { HiOutlineMenu } from "react-icons/hi";
+import { HiChevronLeft, HiChevronRight, HiOutlineMenu } from "react-icons/hi";
 
 export default function Dashboard() {
     const PAGE_SIZE = 9;
@@ -127,8 +127,8 @@ export default function Dashboard() {
             <div className="absolute left-90 -top-30 w-160 h-160 rounded-full bg-gray-100 opacity-8 blur-3xl pointer-events-none z-0"></div>
             <div className="absolute -right-20 -bottom-40 w-90 h-90 rounded-full bg-gray-100 opacity-8 blur-3xl pointer-events-none z-0"></div>
 
-            <div className="md:ml-[20%] flex-1 px-10 relative overflow-y-auto">
-                <h1 className="text-3xl text-yellow-300 font-bold mt-15 mb-10">
+            <div className="md:ml-[20%] flex-1 px-10 relative overflow-y-auto pb-10">
+                <h1 className="text-4xl text-yellow-300 font-bold mt-15 mb-12">
                     Recent Summarized Bills
                 </h1>
 
@@ -136,9 +136,9 @@ export default function Dashboard() {
                     <button
                         onClick={() => goToPage(currentPage - 1)}
                         disabled={isFirst}
-                        className="px-3 py-1 text-sm border rounded disabled:opacity-50 hover:bg-gray-700"
+                        className="p-2 border rounded disabled:opacity-50 hover:bg-gray-700"
                     >
-                        Prev
+                        <HiChevronLeft className="w-5 h-5" />
                     </button>
 
                     {getPageList().map((p, idx) =>
@@ -150,7 +150,7 @@ export default function Dashboard() {
                             <button
                                 key={p}
                                 onClick={() => goToPage(p)}
-                                className={`px-3 py-1 text-sm border rounded ${
+                                className={`px-3 py-1 text-base border rounded ${
                                     p === currentPage
                                         ? "bg-yellow-300 text-black"
                                         : "hover:bg-gray-700"
@@ -164,13 +164,13 @@ export default function Dashboard() {
                     <button
                         onClick={() => goToPage(currentPage + 1)}
                         disabled={isLast}
-                        className="px-3 py-1 text-sm border rounded disabled:opacity-50 hover:bg-gray-700"
+                        className="p-2 border rounded disabled:opacity-50 hover:bg-gray-700"
                     >
-                        Next
+                        <HiChevronRight className="w-5 h-5" />
                     </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {loading ? (
                         Array.from({ length: PAGE_SIZE }).map((_, i) => (
                             <div
@@ -208,17 +208,17 @@ export default function Dashboard() {
                                 )}
                                 <div className="flex flex-col justify-between p-1">
                                     <div>
-                                        <p className="mt-2 font-semibold text-sm text-center">
+                                        <p className="mt-2 font-semibold text-base text-center">
                                             {bill.issuer ||
                                                 bill.billType ||
                                                 "Unnamed Bill"}
                                         </p>
-                                        <p className="mt-3 text-[10px] text-gray-300 text-justify hyphens-auto line-clamp-4">
-                                            {bill.explanation?.slice(0, 192) ||
+                                        <p className="mt-3 text-xs text-gray-300 text-justify hyphens-auto line-clamp-5">
+                                            {bill.explanation?.slice(0, 256) ||
                                                 "No explanation available."}
                                         </p>
                                     </div>
-                                    <p className="text-xs text-gray-400 mt-4 text-end">
+                                    <p className="text-sm text-gray-400 mt-4 text-end">
                                         {bill.billDate || "No Date"}
                                     </p>
                                 </div>
