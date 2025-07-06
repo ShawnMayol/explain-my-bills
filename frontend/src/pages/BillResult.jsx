@@ -9,6 +9,7 @@ import { db } from "../../firebase/firebaseConfig";
 import { getAuth } from "firebase/auth";
 import { collection, doc, setDoc } from "firebase/firestore";
 import { HiOutlineMenu } from "react-icons/hi";
+import { HiOutlineX } from "react-icons/hi";
 
 function usePrompt(message, shouldBlockRef) {
     const { navigator } = useContext(UNSAFE_NavigationContext);
@@ -37,11 +38,29 @@ export default function BillResult() {
     const [imgUrl, setImgUrl] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [isBillValid, setIsBillValid] = useState(true);
+    const [showImageModal, setShowImageModal] = useState(false);
 
     const shouldBlockRef = useRef(true);
 
     const promptMsg =
         "Are you sure you want to leave? You have unsaved changes.";
+    useEffect(() => {
+        if (!billData) {
+            setIsBillValid(false);
+            return;
+        }
+        if (typeof billData.isValidBill === "boolean") {
+            setIsBillValid(billData.isValidBill);
+        } else {
+            const valid =
+                !!billData.billType &&
+                !!billData.issuer &&
+                billData.totalBill !== undefined &&
+                !!billData.explanation;
+            setIsBillValid(valid);
+        }
+    }, [billData]);
 
     useEffect(() => {
         shouldBlockRef.current = true;
@@ -110,7 +129,7 @@ export default function BillResult() {
     const handleDelete = () => {
         if (window.confirm("Are you sure?")) {
             shouldBlockRef.current = false;
-            window.location.assign("/dashboard"); 
+            window.location.assign("/dashboard");
         }
     };
 
@@ -135,7 +154,6 @@ export default function BillResult() {
                 onClose={() => setSidebarOpen(false)}
             />
 
-            {/* Top Bar Mobile */}
             <div
                 className={`fixed top-0 left-0 right-0 z-30 md:hidden flex items-center h-12 px-4 py-7 transition-colors duration-300 ${
                     scrolled ? "bg-black/50" : "bg-black/10"
@@ -148,6 +166,30 @@ export default function BillResult() {
                     <HiOutlineMenu className="w-7 h-7" />
                 </button>
             </div>
+            {showImageModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
+                    onClick={() => setShowImageModal(false)}
+                >
+                    <div
+                        className="relative"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            className="absolute top-2 right-2 bg-black/50 hover:bg-black text-white text-3xl z-10 rounded-full p-2 transition cursor-pointer"
+                            onClick={() => setShowImageModal(false)}
+                            aria-label="Close"
+                        >
+                            <HiOutlineX />
+                        </button>
+                        <img
+                            src={imgUrl}
+                            alt="bill full"
+                            className="max-h-[90vh] max-w-[90vw] rounded-lg shadow-2xl"
+                        />
+                    </div>
+                </div>
+            )}
 
             <main className="md:ml-[20%] flex-1 flex flex-col items-center px-4 md:px-10 py-12 min-h-screen mt-4">
                 <div className="w-full max-w-6xl">
@@ -162,7 +204,8 @@ export default function BillResult() {
                                     <img
                                         src={imgUrl}
                                         alt="bill"
-                                        className="object-contain h-full w-full rounded"
+                                        className="object-contain h-full w-full rounded cursor-zoom-in"
+                                        onClick={() => setShowImageModal(true)}
                                     />
                                 ) : (
                                     <span className="text-gray-400">
@@ -261,13 +304,18 @@ export default function BillResult() {
                             </div>
                             <div className="flex gap-4 md:gap-8 justify-end mt-6 mb-10 flex-wrap">
                                 <button
-                                    className="w-28 md:w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-yellow-300 hover:text-black transition cursor-pointer"
+                                    className={`w-28 md:w-32 py-2 border-2 border-white rounded-full font-semibold text-white transition ${
+                                        isBillValid
+                                            ? "hover:bg-yellow-300 hover:text-black cursor-pointer"
+                                            : "opacity-50 cursor-not-allowed"
+                                    }`}
                                     onClick={handleSave}
+                                    disabled={!isBillValid}
                                 >
                                     Save
                                 </button>
                                 <button
-                                    className="w-28 md:w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-yellow-300 hover:text-black transition cursor-pointer"
+                                    className="w-28 md:w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-red-500 hover:text-white transition cursor-pointer"
                                     onClick={handleDelete}
                                 >
                                     Delete
