@@ -233,7 +233,7 @@ export default function Dashboard() {
 
                 <Link
                     to="/bill/summarization"
-                    className="absolute bottom-10 right-10 px-6 py-3 border-2 border-white text-2xl font-semibold rounded-3xl hover:bg-gray-100 hover:text-black transition"
+                    className="fixed bottom-10 right-10 px-6 py-3 bg-zinc-900 border-2 border-white text-2xl font-semibold rounded-3xl hover:bg-gray-100 hover:text-black transition"
                 >
                     +
                 </Link>
