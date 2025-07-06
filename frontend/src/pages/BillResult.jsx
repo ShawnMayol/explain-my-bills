@@ -197,7 +197,6 @@ export default function BillResult() {
                         Summarized Bill Result
                     </span>
                     <div className="flex flex-col md:flex-row gap-12">
-                        {/* Image */}
                         <div className="flex-shrink-0 flex flex-col items-center">
                             <div className="w-full max-w-[340px] h-[400px] bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
                                 {imgUrl ? (
@@ -224,42 +223,46 @@ export default function BillResult() {
                                         {billData.billType || "—"}
                                     </span>
                                 </div>
-                                <div>
-                                    <b className="text-yellow-300">Issuer:</b>{" "}
-                                    <span className="font-semibold break-words">
-                                        {billData.issuer || "—"}
-                                    </span>
-                                </div>
-                                <div>
-                                    <b className="text-yellow-300">Total:</b>{" "}
-                                    <span className="font-semibold">
-                                        {billData.totalBill !== undefined
-                                            ? `Php ${billData.totalBill.toLocaleString(
-                                                  "en-PH",
-                                                  {
-                                                      minimumFractionDigits: 2,
-                                                      maximumFractionDigits: 2,
-                                                  }
-                                              )}`
-                                            : "—"}
-                                    </span>
-                                </div>
-                                <div>
-                                    <b className="text-yellow-300">
-                                        Bill Date:
-                                    </b>{" "}
-                                    <span className="font-semibold">
-                                        {billData.billDate
-                                            ? new Date(
-                                                  billData.billDate
-                                              ).toLocaleDateString("en-US", {
-                                                  year: "numeric",
-                                                  month: "long",
-                                                  day: "numeric",
-                                              })
-                                            : "—"}
-                                    </span>
-                                </div>
+                                {isBillValid && (
+                                    <>
+                                        <div>
+                                            <b className="text-yellow-300">Issuer:</b>{" "}
+                                            <span className="font-semibold break-words">
+                                                {billData.issuer || "—"}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <b className="text-yellow-300">Total:</b>{" "}
+                                            <span className="font-semibold">
+                                                {billData.totalBill !== undefined
+                                                    ? `Php ${billData.totalBill.toLocaleString(
+                                                          "en-PH",
+                                                          {
+                                                              minimumFractionDigits: 2,
+                                                              maximumFractionDigits: 2,
+                                                          }
+                                                      )}`
+                                                    : "—"}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <b className="text-yellow-300">
+                                                Bill Date:
+                                            </b>{" "}
+                                            <span className="font-semibold">
+                                                {billData.billDate
+                                                    ? new Date(
+                                                          billData.billDate
+                                                      ).toLocaleDateString("en-US", {
+                                                          year: "numeric",
+                                                          month: "long",
+                                                          day: "numeric",
+                                                      })
+                                                    : "—"}
+                                            </span>
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
                             <div className="mb-6 flex flex-col">
@@ -278,30 +281,34 @@ export default function BillResult() {
                                     }}
                                 />
                             </div>
-                            <div className="mb-6 flex flex-col">
-                                <b className="text-yellow-300 mb-2">
-                                    Highlights:
-                                </b>
-                                <textarea
-                                    className="w-full border border-white/20 rounded bg-zinc-900 px-4 py-3 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                                    value={highlightStr}
-                                    readOnly
-                                    rows={8}
-                                    style={{
-                                        resize: "vertical",
-                                        minHeight: 120,
-                                        maxHeight: 250,
-                                    }}
-                                />
-                            </div>
-                            <div className="mb-8">
-                                <b className="text-yellow-300">
-                                    Discrepancies:
-                                </b>{" "}
-                                <span className="font-semibold break-words">
-                                    {billData.discrepancies || "None"}
-                                </span>
-                            </div>
+                            {isBillValid && (
+                                <>
+                                    <div className="mb-6 flex flex-col">
+                                        <b className="text-yellow-300 mb-2">
+                                            Highlights:
+                                        </b>
+                                        <textarea
+                                            className="w-full border border-white/20 rounded bg-zinc-900 px-4 py-3 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                                            value={highlightStr}
+                                            readOnly
+                                            rows={8}
+                                            style={{
+                                                resize: "vertical",
+                                                minHeight: 120,
+                                                maxHeight: 250,
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="mb-8">
+                                        <b className="text-yellow-300">
+                                            Discrepancies:
+                                        </b>{" "}
+                                        <span className="font-semibold break-words">
+                                            {billData.discrepancies || "None"}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
                             <div className="flex gap-4 md:gap-8 justify-end mt-6 mb-10 flex-wrap">
                                 <button
                                     className={`w-28 md:w-32 py-2 border-2 border-white rounded-full font-semibold text-white transition ${
