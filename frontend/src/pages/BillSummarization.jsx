@@ -2,6 +2,8 @@ import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { HiOutlineMenu } from "react-icons/hi";
+import { getAuth } from "firebase/auth";
+import { getFirestore, collection, doc, setDoc } from "firebase/firestore";
 
 const MAX_FILE_SIZE_MB = 5;
 
@@ -42,12 +44,17 @@ export default function BillSummarization() {
     };
 
     const handleUpload = () => {
-        setError("");
         if (!selectedFile) {
             setError("Please select an image.");
             return;
         }
-        navigate("/bill/awaiting", { state: { file: selectedFile } });
+
+        navigate("/bill/awaiting", {
+            state: {
+                file: selectedFile,
+                previewUrl: previewUrl
+            }
+        });
     };
 
     useEffect(() => {

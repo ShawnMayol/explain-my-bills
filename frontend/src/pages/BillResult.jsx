@@ -7,7 +7,7 @@ import {
 import Sidebar from "../components/Sidebar";
 import { db } from "../../firebase/firebaseConfig";
 import { getAuth } from "firebase/auth";
-import { collection, doc, setDoc } from "firebase/firestore";
+import { collection, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { HiOutlineMenu } from "react-icons/hi";
 
 function usePrompt(message, shouldBlockRef) {
@@ -84,33 +84,105 @@ export default function BillResult() {
     const handleSave = async () => {
         const auth = getAuth();
         const user = auth.currentUser;
+
         if (!user) {
             alert("You must be logged in to save a bill.");
             return;
         }
+
+        if (!file) {
+            alert("No file found. Please re-upload your bill.");
+            navigate("/bill/summarization");
+            return;
+        }
+
         try {
+            // generate cloudinary upload signature
+            const userId = user.uid;
+            const filename = file.name.split(".")[0];
+
+            const sigRes = await fetch("http://127.0.0.1:8000/upload-signature", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId, filename }),
+            });
+
+            const {
+            cloudName,
+            apiKey,
+            timestamp,
+            signature,
+            folder,
+            publicId,
+            } = await sigRes.json();
+
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("api_key", apiKey);
+            formData.append("timestamp", timestamp);
+            formData.append("signature", signature);
+            formData.append("folder", folder);
+            formData.append("public_id", publicId);
+
+            const cloudinaryRes = await fetch(
+            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+            {
+                method: "POST",
+                body: formData,
+            }
+            );
+
+            const cloudinaryData = await cloudinaryRes.json();
+
             const imageId = `bill-${Date.now()}`;
             const billDocRef = doc(
-                collection(db, "users", user.uid, "bills"),
-                imageId
+            collection(db, "users", user.uid, "bills"),
+            imageId
             );
+
             await setDoc(billDocRef, {
-                ...billData,
-                imageId: imageId,
-                createdAt: new Date().toISOString(),
+            ...billData, 
+            imageUrl: cloudinaryData.secure_url,
+            publicId: cloudinaryData.public_id,
+            imageId: imageId,
+            createdAt: new Date().toISOString(),
             });
+
             shouldBlockRef.current = false;
-            window.location.assign("/dashboard");
+            navigate("/dashboard");
         } catch (error) {
             console.error("Failed to save bill:", error);
             alert("Failed to save bill. Please try again.");
         }
     };
 
-    const handleDelete = () => {
-        if (window.confirm("Are you sure?")) {
+    const handleDelete = async () => {
+        if (!window.confirm("Are you sure?")) return;
+
+        const auth = getAuth();
+        const user = auth.currentUser;
+
+        if (!user || !billData?.imageId || !billData?.publicId) {
+            alert("Something went wrong — missing user or bill data.");
+            return;
+        }
+
+        try {
+            // deleting from cloudinary (not sure if this works yet)
+            await fetch("https://localhost:8000/delete-cloudinary", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ publicId: billData.publicId }),
+            });
+
+            const billDocRef = doc(db, "users", user.uid, "bills", billData.imageId);
+            await deleteDoc(billDocRef);
+
             shouldBlockRef.current = false;
-            window.location.assign("/dashboard"); 
+            window.location.assign("/dashboard");
+        } catch (err) {
+            console.error("Error deleting bill:", err);
+            alert("Failed to delete the bill. Please try again.");
         }
     };
 
