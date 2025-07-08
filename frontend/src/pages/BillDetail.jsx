@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { db } from "../../firebase/firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
-import { HiOutlineMenu, HiOutlineX } from "react-icons/hi";
+import { doc, getDoc, deleteDoc } from "firebase/firestore";
+import { HiOutlineMenu, HiOutlineX, HiTrash } from "react-icons/hi";
 import { useAuth } from "../context/AuthContext";
 
 export default function BillDetail() {
@@ -18,6 +18,7 @@ export default function BillDetail() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [showImageModal, setShowImageModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 20);
@@ -47,6 +48,45 @@ export default function BillDetail() {
 
         fetchBill();
     }, [billId, user]);
+
+    const handleDelete = async () => {
+        if (!window.confirm("Are you sure you want to delete this bill?")) {
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            // Delete the image from Cloudinary if it exists
+            if (billData.imagePublicId) {
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/delete-cloudinary`,
+                    {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            publicId: billData.imagePublicId,
+                        }),
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Failed to delete image from Cloudinary");
+                }
+            }
+
+            // Delete the bill document from Firestore
+            await deleteDoc(doc(db, "users", user.uid, "bills", billId));
+
+            // Navigate back to dashboard
+            navigate("/dashboard");
+        } catch (err) {
+            console.error("Error deleting bill:", err);
+            setError("Failed to delete bill. Please try again.");
+            setIsDeleting(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -98,42 +138,22 @@ export default function BillDetail() {
             >
                 <button
                     className="text-yellow-300 hover:text-white cursor-pointer ps-5"
-                    onClick={() => setSidebarOpen(true)}
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
                 >
-                    <HiOutlineMenu className="w-7 h-7" />
+                    {sidebarOpen ? (
+                        <HiOutlineX size={28} />
+                    ) : (
+                        <HiOutlineMenu size={28} />
+                    )}
                 </button>
             </div>
 
-            {showImageModal && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
-                    onClick={() => setShowImageModal(false)}
-                >
-                    <div
-                        className="relative"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <button
-                            className="absolute top-2 right-2 bg-black/50 hover:bg-black text-white text-3xl z-10 rounded-full p-2 transition cursor-pointer"
-                            onClick={() => setShowImageModal(false)}
-                            aria-label="Close"
-                        >
-                            <HiOutlineX />
-                        </button>
-                        <img
-                            src={imgUrl}
-                            alt="bill full"
-                            className="max-h-[90vh] max-w-[90vw] rounded-lg shadow-2xl"
-                        />
-                    </div>
-                </div>
-            )}
-
-            <main className="md:ml-[20%] flex-1 flex flex-col items-center px-4 md:px-10 py-12 min-h-screen mt-4">
-                <div className="w-full max-w-6xl">
-                    <h1 className="mb-6 text-3xl font-bold text-yellow-300">
-                        Bill Information
+            <div className="flex-1 p-4 pt-[3.5rem] md:ml-64">
+                <div className="max-w-4xl mx-auto">
+                    <h1 className="text-2xl font-bold text-yellow-300 mb-6">
+                        {billData.billType} Bill Details
                     </h1>
+
                     <div className="flex flex-col md:flex-row gap-12">
                         <div className="flex-shrink-0 flex` flex-col items-center">
                             <div className="w-full max-w-[340px] h-[400px] bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
@@ -205,18 +225,58 @@ export default function BillDetail() {
                                 content={billData.discrepancies || "None"}
                             />
 
-                            <div className="flex justify-end">
+                            <div className="flex justify-end gap-4">
                                 <button
                                     onClick={() => navigate("/dashboard")}
                                     className="px-6 py-2 border-2 border-white rounded-full hover:bg-yellow-300 hover:text-black"
                                 >
                                     Back to Dashboard
                                 </button>
+                                <button
+                                    onClick={handleDelete}
+                                    className={`px-6 py-2 border-2 rounded-full flex items-center justify-center gap-2 ${
+                                        isDeleting
+                                            ? "bg-red-600 text-white cursor-not-allowed"
+                                            : "bg-red-500 text-white hover:bg-red-600 cursor-pointer"
+                                    }`}
+                                    disabled={isDeleting}
+                                >
+                                    {isDeleting ? (
+                                        <svg
+                                            className="animate-spin h-4 w-4"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            />
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            />
+                                        </svg>
+                                    ) : (
+                                        <HiTrash className="w-5 h-5" />
+                                    )}
+
+                                    {isDeleting ? (
+                                        <span>Deleting...</span>
+                                    ) : (
+                                        <span>Delete Bill</span>
+                                    )}
+                                </button>
                             </div>
                         </section>
                     </div>
                 </div>
-            </main>
+            </div>
         </div>
     );
 }
