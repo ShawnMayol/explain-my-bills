@@ -117,7 +117,7 @@ export default function Dashboard() {
 
             <div className="absolute top-0 left-0 right-0 z-30 md:hidden bg-black/10 flex items-center h-12 px-4 py-7">
                 <button
-                    className="text-yellow-300 hover:text-white cursor-pointer ps-5" 
+                    className="text-yellow-300 hover:text-white cursor-pointer ps-5"
                     onClick={() => setSidebarOpen(true)}
                 >
                     <HiOutlineMenu className="w-7 h-7" />
@@ -150,7 +150,7 @@ export default function Dashboard() {
                             <button
                                 key={p}
                                 onClick={() => goToPage(p)}
-                                className={`px-3 py-1 text-base border rounded ${
+                                className={`w-10 py-1 text-base border rounded cursor-pointer ${
                                     p === currentPage
                                         ? "bg-yellow-300 text-black"
                                         : "hover:bg-gray-700"
@@ -193,9 +193,10 @@ export default function Dashboard() {
                         ))
                     ) : bills.length > 0 ? (
                         bills.map((bill) => (
-                            <div
+                            <Link
                                 key={bill.id}
-                                className="border border-gray-600 rounded-lg p-2 flex bg-zinc-900"
+                                to={`/bill/${bill.id}`}
+                                className="block border border-gray-600 rounded-lg p-2 flex bg-zinc-900 hover:ring-2 hover:ring-yellow-300 transition"
                             >
                                 {bill.imageUrl ? (
                                     <img
@@ -218,11 +219,19 @@ export default function Dashboard() {
                                                 "No explanation available."}
                                         </p>
                                     </div>
-                                    <p className="text-sm text-gray-400 mt-4 text-end">
-                                        {bill.billDate || "No Date"}
+                                    <p className="text-xs text-gray-400 mt-4 text-end">
+                                        {bill.billDate
+                                            ? new Date(
+                                                  bill.billDate
+                                              ).toLocaleDateString("en-US", {
+                                                  year: "numeric",
+                                                  month: "long",
+                                                  day: "numeric",
+                                              })
+                                            : "—"}
                                     </p>
                                 </div>
-                            </div>
+                            </Link>
                         ))
                     ) : (
                         <p className="text-gray-400 col-span-2">
