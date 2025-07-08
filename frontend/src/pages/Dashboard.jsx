@@ -15,7 +15,7 @@ import { db } from "../../firebase/firebaseConfig";
 import { HiChevronLeft, HiChevronRight, HiOutlineMenu } from "react-icons/hi";
 
 export default function Dashboard() {
-    const PAGE_SIZE = 9;
+    const PAGE_SIZE = 6;
 
     const [bills, setBills] = useState([]);
     const [pageCursors, setPageCursors] = useState([null]);
@@ -127,16 +127,16 @@ export default function Dashboard() {
             <div className="absolute left-90 -top-30 w-160 h-160 rounded-full bg-gray-100 opacity-8 blur-3xl pointer-events-none z-0"></div>
             <div className="absolute -right-20 -bottom-40 w-90 h-90 rounded-full bg-gray-100 opacity-8 blur-3xl pointer-events-none z-0"></div>
 
-            <div className="md:ml-[20%] flex-1 px-10 relative overflow-y-auto pb-10">
-                <h1 className="text-4xl text-yellow-300 font-bold mt-15 mb-12">
+            <div className="md:ml-[20%] flex-1 px-4 md:px-10 relative overflow-y-auto pb-10">
+                <h1 className="text-2xl md:text-4xl text-yellow-300 font-bold mt-12 md:mt-15 mb-8 md:mb-12">
                     Recent Summarized Bills
                 </h1>
 
-                <div className="flex gap-1 mb-2">
+                <div className="flex justify-center md:justify-start gap-1 mb-4 md:mb-6">
                     <button
                         onClick={() => goToPage(currentPage - 1)}
                         disabled={isFirst}
-                        className="p-2 border rounded disabled:opacity-50 hover:bg-gray-700"
+                        className="p-2 rounded-full disabled:opacity-50 not-disabled:hover:bg-gray-700 not-disabled:cursor-pointer"
                     >
                         <HiChevronLeft className="w-5 h-5" />
                     </button>
@@ -164,24 +164,24 @@ export default function Dashboard() {
                     <button
                         onClick={() => goToPage(currentPage + 1)}
                         disabled={isLast}
-                        className="p-2 border rounded disabled:opacity-50 hover:bg-gray-700"
+                        className="p-2 rounded-full disabled:opacity-50 not-disabled:hover:bg-gray-700 not-disabled:cursor-pointer"
                     >
                         <HiChevronRight className="w-5 h-5" />
                     </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                     {loading ? (
                         Array.from({ length: PAGE_SIZE }).map((_, i) => (
                             <div
                                 key={i}
-                                className="border border-gray-600 rounded-lg p-2 flex bg-zinc-900 animate-pulse"
+                                className="border border-gray-600 rounded-lg p-4 flex flex-col bg-zinc-900 animate-pulse h-[420px]"
                             >
-                                <div className="w-32 h-36 bg-gray-700 rounded mr-4" />
-                                <div className="flex-1 flex flex-col justify-between p-1">
+                                <div className="w-full h-48 bg-gray-700 rounded mb-4" />
+                                <div className="flex-1 flex flex-col justify-between">
                                     <div>
-                                        <div className="mx-auto w-3/5 h-5 bg-gray-700 rounded" />
-                                        <div className="space-y-1 mt-3">
+                                        <div className="w-3/5 h-5 bg-gray-700 rounded mx-auto mb-4" />
+                                        <div className="space-y-2">
                                             <div className="w-full h-4 bg-gray-700 rounded" />
                                             <div className="w-full h-4 bg-gray-700 rounded" />
                                             <div className="w-5/6 h-4 bg-gray-700 rounded" />
@@ -196,53 +196,58 @@ export default function Dashboard() {
                             <Link
                                 key={bill.id}
                                 to={`/bill/${bill.id}`}
-                                className="block border border-gray-600 rounded-lg p-2 flex bg-zinc-900 hover:ring-2 hover:ring-yellow-300 transition"
+                                className="border border-gray-600 rounded-lg p-4 flex flex-col bg-zinc-900 hover:ring-2 hover:ring-yellow-300 transition h-[420px]"
                             >
-                                {bill.imageUrl ? (
-                                    <img
-                                        src={bill.imageUrl}
-                                        alt="Bill"
-                                        className="w-128 h-full object-cover rounded mr-4"
-                                    />
-                                ) : (
-                                    <div className="w-164 h-full bg-gray-200 rounded mr-4"></div>
-                                )}
-                                <div className="flex flex-col justify-between p-1">
+                                <div className="w-full h-48 rounded-lg mb-4 overflow-hidden bg-gray-800">
+                                    {bill.imageUrl ? (
+                                        <img
+                                            src={bill.imageUrl}
+                                            alt="Bill"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gray-700 flex items-center justify-center text-gray-500">
+                                            No Image
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1 flex flex-col justify-between">
                                     <div>
-                                        <p className="mt-2 font-semibold text-base text-center">
-                                            {bill.issuer ||
-                                                bill.billType ||
-                                                "Unnamed Bill"}
+                                        <p className="text-lg font-semibold text-center mb-3 text-yellow-300">
+                                            {bill.issuer || bill.billType || "Unnamed Bill"}
                                         </p>
-                                        <p className="mt-3 text-xs text-gray-300 text-justify hyphens-auto line-clamp-5">
+                                        <p className="text-sm text-gray-300 text-justify line-clamp-4">
                                             {bill.explanation?.slice(0, 256) ||
                                                 "No explanation available."}
                                         </p>
                                     </div>
                                     <p className="text-xs text-gray-400 mt-4 text-end">
                                         {bill.billDate
-                                            ? new Date(
-                                                  bill.billDate
-                                              ).toLocaleDateString("en-US", {
-                                                  year: "numeric",
-                                                  month: "long",
-                                                  day: "numeric",
-                                              })
+                                            ? new Date(bill.billDate).toLocaleDateString(
+                                                  "en-US",
+                                                  {
+                                                      year: "numeric",
+                                                      month: "long",
+                                                      day: "numeric",
+                                                  }
+                                              )
                                             : "—"}
                                     </p>
                                 </div>
                             </Link>
                         ))
                     ) : (
-                        <p className="text-gray-400 col-span-2">
-                            No bills found for this account.
-                        </p>
+                        <div className="col-span-full text-center py-8">
+                            <p className="text-gray-400 text-lg">
+                                No bills found for this account.
+                            </p>
+                        </div>
                     )}
                 </div>
 
                 <Link
                     to="/bill/summarization"
-                    className="fixed bottom-10 right-10 px-6 py-3 bg-zinc-900 border-2 border-white text-2xl font-semibold rounded-3xl hover:bg-gray-100 hover:text-black transition"
+                    className="fixed bottom-6 right-6 md:bottom-10 md:right-10 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-zinc-900 border-2 border-white text-2xl md:text-3xl font-semibold rounded-full hover:bg-yellow-300 hover:text-black transition shadow-lg"
                 >
                     +
                 </Link>
