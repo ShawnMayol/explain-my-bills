@@ -1,15 +1,10 @@
 import React, { useEffect, useState, useContext, useRef } from "react";
-import {
-    useLocation,
-    useNavigate,
-    UNSAFE_NavigationContext,
-} from "react-router-dom";
+import { useLocation, useNavigate, UNSAFE_NavigationContext } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { db } from "../../firebase/firebaseConfig";
 import { getAuth } from "firebase/auth";
 import { collection, doc, setDoc } from "firebase/firestore";
-import { HiOutlineMenu } from "react-icons/hi";
-import { HiOutlineX } from "react-icons/hi";
+import { HiOutlineMenu, HiOutlineX } from "react-icons/hi";
 
 function usePrompt(message, shouldBlockRef) {
     const { navigator } = useContext(UNSAFE_NavigationContext);
@@ -43,8 +38,7 @@ export default function BillResult() {
 
     const shouldBlockRef = useRef(true);
 
-    const promptMsg =
-        "Are you sure you want to leave? You have unsaved changes.";
+    const promptMsg = "Are you sure you want to leave? You have unsaved changes.";
     useEffect(() => {
         if (!billData) {
             setIsBillValid(false);
@@ -103,11 +97,55 @@ export default function BillResult() {
     const handleSave = async () => {
         const auth = getAuth();
         const user = auth.currentUser;
+
         if (!user) {
             alert("You must be logged in to save a bill.");
             return;
         }
+
         try {
+            // Get upload signature from backend
+            const userId = user.uid;
+            const filename = file.name.split(".")[0];
+
+            const sigRes = await fetch(
+                "http://127.0.0.1:8000/upload-signature",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId, filename }),
+                }
+            );
+
+            const {
+                cloudName,
+                apiKey,
+                timestamp,
+                signature,
+                folder,
+                publicId,
+            } = await sigRes.json();
+
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("api_key", apiKey);
+            formData.append("timestamp", timestamp);
+            formData.append("signature", signature);
+            formData.append("folder", folder);
+            formData.append("public_id", publicId);
+
+            // Upload image to Cloudinary
+            const cloudinaryRes = await fetch(
+                `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+                {
+                    method: "POST",
+                    body: formData,
+                }
+            );
+
+            const cloudinaryData = await cloudinaryRes.json();
+
+            // Save data to Firestore
             const imageId = `bill-${Date.now()}`;
             const billDocRef = doc(
                 collection(db, "users", user.uid, "bills"),
@@ -117,7 +155,10 @@ export default function BillResult() {
                 ...billData,
                 imageId: imageId,
                 createdAt: new Date().toISOString(),
+                imageUrl: cloudinaryData.secure_url,
+                publicId: cloudinaryData.public_id,
             });
+
             shouldBlockRef.current = false;
             window.location.assign("/dashboard");
         } catch (error) {
@@ -207,123 +248,65 @@ export default function BillResult() {
                                         onClick={() => setShowImageModal(true)}
                                     />
                                 ) : (
-                                    <span className="text-gray-400">
-                                        No Image
-                                    </span>
+                                    <span className="text-gray-400">No Image</span>
                                 )}
                             </div>
                         </div>
-                        <section className="flex-1 flex flex-col">
-                            <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4">
-                                <div>
-                                    <b className="text-yellow-300">
-                                        Bill Type:
-                                    </b>{" "}
-                                    <span className="font-semibold break-words">
-                                        {billData.billType || "—"}
-                                    </span>
-                                </div>
-                                {isBillValid && (
-                                    <>
-                                        <div>
-                                            <b className="text-yellow-300">Issuer:</b>{" "}
-                                            <span className="font-semibold break-words">
-                                                {billData.issuer || "—"}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <b className="text-yellow-300">Total:</b>{" "}
-                                            <span className="font-semibold">
-                                                {billData.totalBill !== undefined
-                                                    ? `Php ${billData.totalBill.toLocaleString(
-                                                          "en-PH",
-                                                          {
-                                                              minimumFractionDigits: 2,
-                                                              maximumFractionDigits: 2,
-                                                          }
-                                                      )}`
-                                                    : "—"}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <b className="text-yellow-300">
-                                                Bill Date:
-                                            </b>{" "}
-                                            <span className="font-semibold">
-                                                {billData.billDate
-                                                    ? new Date(
-                                                          billData.billDate
-                                                      ).toLocaleDateString("en-US", {
-                                                          year: "numeric",
-                                                          month: "long",
-                                                          day: "numeric",
-                                                      })
-                                                    : "—"}
-                                            </span>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            <div className="mb-6 flex flex-col">
-                                <b className="text-yellow-300 mb-2">
-                                    Explanation:
-                                </b>
-                                <textarea
-                                    className="w-full border border-white/20 rounded bg-zinc-900 px-4 py-3 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                                    value={billData.explanation || ""}
-                                    readOnly
-                                    rows={8}
-                                    style={{
-                                        resize: "vertical",
-                                        minHeight: 120,
-                                        maxHeight: 250,
-                                    }}
+                        <section className="flex-1 flex flex-col space-y-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4">
+                                <InfoItem
+                                    label="Bill Type"
+                                    value={billData.billType}
+                                />
+                                <InfoItem
+                                    label="Issuer"
+                                    value={billData.issuer}
+                                />
+                                <InfoItem
+                                    label="Total"
+                                    value={billData.totalBill !== undefined
+                                        ? `Php ${billData.totalBill.toLocaleString(
+                                              "en-PH",
+                                              {
+                                                  minimumFractionDigits: 2,
+                                                  maximumFractionDigits: 2,
+                                              }
+                                          )}`
+                                        : "—"}
+                                />
+                                <InfoItem
+                                    label="Bill Date"
+                                    value={billData.billDate
+                                        ? new Date(billData.billDate).toLocaleDateString(
+                                              "en-US",
+                                              { year: "numeric", month: "long", day: "numeric" }
+                                          )
+                                        : "—"}
                                 />
                             </div>
-                            {isBillValid && (
-                                <>
-                                    <div className="mb-6 flex flex-col">
-                                        <b className="text-yellow-300 mb-2">
-                                            Highlights:
-                                        </b>
-                                        <textarea
-                                            className="w-full border border-white/20 rounded bg-zinc-900 px-4 py-3 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                                            value={highlightStr}
-                                            readOnly
-                                            rows={8}
-                                            style={{
-                                                resize: "vertical",
-                                                minHeight: 120,
-                                                maxHeight: 250,
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="mb-8">
-                                        <b className="text-yellow-300">
-                                            Discrepancies:
-                                        </b>{" "}
-                                        <span className="font-semibold break-words">
-                                            {billData.discrepancies || "None"}
-                                        </span>
-                                    </div>
-                                </>
-                            )}
-                            <div className="flex gap-4 md:gap-8 justify-end mt-6 mb-10 flex-wrap">
+
+                            <Card title="Explanation" content={billData.explanation} />
+                            <Card title="Highlights" content={highlightStr || "None"} />
+                            <Card
+                                title="Discrepancies"
+                                content={billData.discrepancies || "None"}
+                            />
+
+                            <div className="flex justify-end mt-6 mb-10">
                                 <button
-                                    className={`w-28 md:w-32 py-2 border-2 border-white rounded-full font-semibold text-white transition ${
+                                    onClick={handleSave}
+                                    className={`w-32 py-2 border-2 border-white rounded-full font-semibold text-white transition ${
                                         isBillValid
                                             ? "hover:bg-yellow-300 hover:text-black cursor-pointer"
                                             : "opacity-50 cursor-not-allowed"
                                     }`}
-                                    onClick={handleSave}
                                     disabled={!isBillValid}
                                 >
                                     Save
                                 </button>
                                 <button
-                                    className="w-28 md:w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-red-500 hover:text-white transition cursor-pointer"
                                     onClick={handleDelete}
+                                    className="w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-red-500 hover:text-white transition cursor-pointer ml-4"
                                 >
                                     Delete
                                 </button>
@@ -332,6 +315,26 @@ export default function BillResult() {
                     </div>
                 </div>
             </main>
+        </div>
+    );
+}
+
+function InfoItem({ label, value }) {
+    return (
+        <div>
+            <b className="text-yellow-300">{label}:</b>{" "}
+            <span className="font-semibold break-words">{value || "—"}</span>
+        </div>
+    );
+}
+
+function Card({ title, content }) {
+    return (
+        <div>
+            <h2 className="text-yellow-300 mb-2 font-semibold">{title}:</h2>
+            <div className="w-full border border-white/20 rounded bg-zinc-900 p-4 text-white font-medium max-h-64 overflow-y-auto">
+                {content}
+            </div>
         </div>
     );
 }
