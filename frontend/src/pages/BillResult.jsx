@@ -1,5 +1,9 @@
 import React, { useEffect, useState, useContext, useRef } from "react";
-import { useLocation, useNavigate, UNSAFE_NavigationContext } from "react-router-dom";
+import {
+    useLocation,
+    useNavigate,
+    UNSAFE_NavigationContext,
+} from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { db } from "../../firebase/firebaseConfig";
 import { getAuth } from "firebase/auth";
@@ -35,10 +39,12 @@ export default function BillResult() {
     const [scrolled, setScrolled] = useState(false);
     const [isBillValid, setIsBillValid] = useState(true);
     const [showImageModal, setShowImageModal] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     const shouldBlockRef = useRef(true);
 
-    const promptMsg = "Are you sure you want to leave? You have unsaved changes.";
+    const promptMsg =
+        "Are you sure you want to leave? You have unsaved changes.";
     useEffect(() => {
         if (!billData) {
             setIsBillValid(false);
@@ -103,8 +109,8 @@ export default function BillResult() {
             return;
         }
 
+        setIsSaving(true);
         try {
-            // Get upload signature from backend
             const userId = user.uid;
             const filename = file.name.split(".")[0];
 
@@ -164,6 +170,8 @@ export default function BillResult() {
         } catch (error) {
             console.error("Failed to save bill:", error);
             alert("Failed to save bill. Please try again.");
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -248,7 +256,9 @@ export default function BillResult() {
                                         onClick={() => setShowImageModal(true)}
                                     />
                                 ) : (
-                                    <span className="text-gray-400">No Image</span>
+                                    <span className="text-gray-400">
+                                        No Image
+                                    </span>
                                 )}
                             </div>
                         </div>
@@ -264,29 +274,42 @@ export default function BillResult() {
                                 />
                                 <InfoItem
                                     label="Total"
-                                    value={billData.totalBill !== undefined
-                                        ? `Php ${billData.totalBill.toLocaleString(
-                                              "en-PH",
-                                              {
-                                                  minimumFractionDigits: 2,
-                                                  maximumFractionDigits: 2,
-                                              }
-                                          )}`
-                                        : "—"}
+                                    value={
+                                        billData.totalBill !== undefined
+                                            ? `Php ${billData.totalBill.toLocaleString(
+                                                  "en-PH",
+                                                  {
+                                                      minimumFractionDigits: 2,
+                                                      maximumFractionDigits: 2,
+                                                  }
+                                              )}`
+                                            : "—"
+                                    }
                                 />
                                 <InfoItem
                                     label="Bill Date"
-                                    value={billData.billDate
-                                        ? new Date(billData.billDate).toLocaleDateString(
-                                              "en-US",
-                                              { year: "numeric", month: "long", day: "numeric" }
-                                          )
-                                        : "—"}
+                                    value={
+                                        billData.billDate
+                                            ? new Date(
+                                                  billData.billDate
+                                              ).toLocaleDateString("en-US", {
+                                                  year: "numeric",
+                                                  month: "long",
+                                                  day: "numeric",
+                                              })
+                                            : "—"
+                                    }
                                 />
                             </div>
 
-                            <Card title="Explanation" content={billData.explanation} />
-                            <Card title="Highlights" content={highlightStr || "None"} />
+                            <Card
+                                title="Explanation"
+                                content={billData.explanation}
+                            />
+                            <Card
+                                title="Highlights"
+                                content={highlightStr || "None"}
+                            />
                             <Card
                                 title="Discrepancies"
                                 content={billData.discrepancies || "None"}
@@ -295,14 +318,40 @@ export default function BillResult() {
                             <div className="flex justify-end mt-6 mb-10">
                                 <button
                                     onClick={handleSave}
-                                    className={`w-32 py-2 border-2 border-white rounded-full font-semibold text-white transition ${
-                                        isBillValid
+                                    disabled={!isBillValid || isSaving}
+                                    className={`w-32 py-2 border-2 border-white rounded-full font-semibold text-white transition flex items-center justify-center gap-2 ${
+                                        isBillValid && !isSaving
                                             ? "hover:bg-yellow-300 hover:text-black cursor-pointer"
                                             : "opacity-50 cursor-not-allowed"
                                     }`}
-                                    disabled={!isBillValid}
                                 >
-                                    Save
+                                    {isSaving && (
+                                        <svg
+                                            className="animate-spin h-4 w-4"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            />
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            />
+                                        </svg>
+                                    )}
+                                    {isSaving ? (
+                                        <span>Saving</span>
+                                    ) : (
+                                        <span>Save</span>
+                                    )}
                                 </button>
                                 <button
                                     onClick={handleDelete}
