@@ -147,6 +147,30 @@ export default function BillDetail() {
                     )}
                 </button>
             </div>
+            {showImageModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
+                    onClick={() => setShowImageModal(false)}
+                >
+                    <div
+                        className="relative"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            className="absolute top-2 right-2 bg-black/50 hover:bg-black text-white text-3xl z-10 rounded-full p-2 transition cursor-pointer"
+                            onClick={() => setShowImageModal(false)}
+                            aria-label="Close"
+                        >
+                            <HiOutlineX />
+                        </button>
+                        <img
+                            src={imgUrl}
+                            alt="bill full"
+                            className="max-h-[90vh] max-w-[90vw] rounded-lg shadow-2xl"
+                        />
+                    </div>
+                </div>
+            )}
 
             <div className="flex-1 p-4 pt-[3.5rem] md:ml-64">
                 <div className="max-w-4xl mx-auto">
@@ -228,7 +252,7 @@ export default function BillDetail() {
                             <div className="flex justify-end gap-4">
                                 <button
                                     onClick={() => navigate("/dashboard")}
-                                    className="px-6 py-2 border-2 border-white rounded-full hover:bg-yellow-300 hover:text-black"
+                                    className="px-6 py-2 border-2 border-white rounded-full hover:bg-yellow-300 hover:text-black cursor-pointer"
                                 >
                                     Back to Dashboard
                                 </button>
