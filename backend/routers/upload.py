@@ -25,7 +25,7 @@ async def get_upload_signature(request: Request):
 
     timestamp = int(time.time())
     folder = f"bills/{user_id}"
-    public_id = filename
+    public_id = f"{filename}_{int(time.time())}_{user_id[:5]}"
 
     signature = cloudinary.utils.api_sign_request(
         {
