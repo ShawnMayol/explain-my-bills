@@ -240,13 +240,15 @@ export default function BillResult() {
                 </div>
             )}
 
-            <main className="md:ml-[20%] flex-1 flex flex-col items-center px-4 md:px-10 py-12 min-h-screen mt-4">
+            <main className="w-full md:ml-[20%] flex-1 flex flex-col items-center px-4 md:px-10 py-12 min-h-screen mt-4">
                 <div className="w-full max-w-6xl">
-                    <span className="mb-6 block text-yellow-300 font-semibold text-2xl">
-                        Summarized Bill Result
+                    <span className="mb-6 block text-yellow-300 font-semibold text-xl md:text-2xl">
+                        {isBillValid
+                            ? "Summarized Bill Result"
+                            : "Invalid Bill"}
                     </span>
-                    <div className="flex flex-col md:flex-row gap-12">
-                        <div className="flex-shrink-0 flex flex-col items-center">
+                    <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
+                        <div className="flex-shrink-0 w-full lg:w-auto flex flex-col items-center">
                             <div className="w-full max-w-[340px] h-[400px] bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
                                 {imgUrl ? (
                                     <img
@@ -262,64 +264,77 @@ export default function BillResult() {
                                 )}
                             </div>
                         </div>
-                        <section className="flex-1 flex flex-col space-y-6">
+                        <section className="flex-1 flex flex-col space-y-6 w-full">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4">
                                 <InfoItem
                                     label="Bill Type"
                                     value={billData.billType}
                                 />
-                                <InfoItem
-                                    label="Issuer"
-                                    value={billData.issuer}
-                                />
-                                <InfoItem
-                                    label="Total"
-                                    value={
-                                        billData.totalBill !== undefined
-                                            ? `Php ${billData.totalBill.toLocaleString(
-                                                  "en-PH",
-                                                  {
-                                                      minimumFractionDigits: 2,
-                                                      maximumFractionDigits: 2,
-                                                  }
-                                              )}`
-                                            : "—"
-                                    }
-                                />
-                                <InfoItem
-                                    label="Bill Date"
-                                    value={
-                                        billData.billDate
-                                            ? new Date(
-                                                  billData.billDate
-                                              ).toLocaleDateString("en-US", {
-                                                  year: "numeric",
-                                                  month: "long",
-                                                  day: "numeric",
-                                              })
-                                            : "—"
-                                    }
-                                />
+                                {isBillValid && (
+                                    <>
+                                        <InfoItem
+                                            label="Issuer"
+                                            value={billData.issuer}
+                                        />
+                                        <InfoItem
+                                            label="Total"
+                                            value={
+                                                billData.totalBill !== undefined
+                                                    ? `Php ${billData.totalBill.toLocaleString(
+                                                          "en-PH",
+                                                          {
+                                                              minimumFractionDigits: 2,
+                                                              maximumFractionDigits: 2,
+                                                          }
+                                                      )}`
+                                                    : "—"
+                                            }
+                                        />
+                                        <InfoItem
+                                            label="Bill Date"
+                                            value={
+                                                billData.billDate
+                                                    ? new Date(
+                                                          billData.billDate
+                                                      ).toLocaleDateString(
+                                                          "en-US",
+                                                          {
+                                                              year: "numeric",
+                                                              month: "long",
+                                                              day: "numeric",
+                                                          }
+                                                      )
+                                                    : "—"
+                                            }
+                                        />
+                                    </>
+                                )}
                             </div>
 
                             <Card
                                 title="Explanation"
                                 content={billData.explanation}
                             />
-                            <Card
-                                title="Highlights"
-                                content={highlightStr || "None"}
-                            />
-                            <Card
-                                title="Discrepancies"
-                                content={billData.discrepancies || "None"}
-                            />
+                            {isBillValid && (
+                                <>
+                                    <Card
+                                        title="Highlights"
+                                        content={highlightStr || "None"}
+                                    />
+                                    <Card
+                                        title="Discrepancies"
+                                        content={
+                                            billData.discrepancies || "None"
+                                        }
+                                    />
+                                </>
+                            )}
 
-                            <div className="flex justify-end mt-6 mb-10">
+                            <div className="flex flex-col sm:flex-row justify-end gap-4 mt-6 mb-10">
                                 <button
                                     onClick={handleSave}
                                     disabled={!isBillValid || isSaving}
-                                    className={`w-32 py-2 border-2 border-white rounded-full font-semibold text-white transition flex items-center justify-center gap-2 ${
+                                    className={`w-full sm:w-32 py-2 border-2 border-white rounded-full font-semibold text-white transition flex items-center justify-center gap-2 ${
                                         isBillValid && !isSaving
                                             ? "hover:bg-yellow-300 hover:text-black cursor-pointer"
                                             : "opacity-50 cursor-not-allowed"
@@ -355,7 +370,7 @@ export default function BillResult() {
                                 </button>
                                 <button
                                     onClick={handleDelete}
-                                    className="w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-red-500 hover:text-white transition cursor-pointer ml-4"
+                                    className="w-full sm:w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-red-500 hover:text-white transition cursor-pointer"
                                 >
                                     Delete
                                 </button>
