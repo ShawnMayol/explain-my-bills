@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     reauthenticateWithCredential,
@@ -22,17 +22,17 @@ export default function ChangePassword() {
         (p) => p.providerId === "google.com"
     );
 
+    useEffect(() => {
+        if (isGoogle) {
+            window.open("https://myaccount.google.com/security/signinoptions/password", "_blank");
+            navigate("/profile");
+        }
+    }, [isGoogle, navigate]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
         setSuccess("");
-
-        if (isGoogle) {
-            setError(
-                "Password change is unavailable for Google sign-in accounts."
-            );
-            return;
-        }
 
         if (!oldPassword || !newPassword || !confirmNewPassword) {
             setError("Please fill in all fields.");
@@ -65,6 +65,10 @@ export default function ChangePassword() {
         }
     };
 
+    if (isGoogle) {
+        return null;
+    }
+
     return (
         <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#1B1C21] text-white px-4">
             <div className="bg-white/10 backdrop-blur-lg border border-white/20 px-6 sm:px-12 py-8 sm:py-10 rounded-3xl flex flex-col items-center w-full max-w-[400px] shadow-2xl">
@@ -75,41 +79,32 @@ export default function ChangePassword() {
                     onSubmit={handleSubmit}
                     className="flex flex-col items-center gap-5 w-full"
                 >
-                    {isGoogle ? (
-                        <div className="text-center text-red-500 font-medium">
-                            You signed in with Google. Password changes are
-                            unavailable.
-                        </div>
-                    ) : (
-                        <>
-                            <input
-                                type="password"
-                                value={oldPassword}
-                                onChange={(e) => setOldPassword(e.target.value)}
-                                className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                                placeholder="Old Password"
-                                autoComplete="current-password"
-                            />
-                            <input
-                                type="password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                                placeholder="New Password"
-                                autoComplete="new-password"
-                            />
-                            <input
-                                type="password"
-                                value={confirmNewPassword}
-                                onChange={(e) =>
-                                    setConfirmNewPassword(e.target.value)
-                                }
-                                className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                                placeholder="Confirm New Password"
-                                autoComplete="new-password"
-                            />
-                        </>
-                    )}
+                    <input
+                        type="password"
+                        value={oldPassword}
+                        onChange={(e) => setOldPassword(e.target.value)}
+                        className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                        placeholder="Old Password"
+                        autoComplete="current-password"
+                    />
+                    <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                        placeholder="New Password"
+                        autoComplete="new-password"
+                    />
+                    <input
+                        type="password"
+                        value={confirmNewPassword}
+                        onChange={(e) =>
+                            setConfirmNewPassword(e.target.value)
+                        }
+                        className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                        placeholder="Confirm New Password"
+                        autoComplete="new-password"
+                    />
 
                     <div className="flex flex-col sm:flex-row gap-4 mt-2 w-full">
                         <button
@@ -120,15 +115,12 @@ export default function ChangePassword() {
                             Cancel
                         </button>
 
-                        {!isGoogle && (
-                            <button
-                                type="submit"
-                                disabled={isGoogle}
-                                className="flex-1 border-2 border-white rounded-full px-7 py-2 font-semibold text-white hover:bg-yellow-300 hover:text-black transition hover:cursor-pointer"
-                            >
-                                Confirm
-                            </button>
-                        )}
+                        <button
+                            type="submit"
+                            className="flex-1 border-2 border-white rounded-full px-7 py-2 font-semibold text-white hover:bg-yellow-300 hover:text-black transition hover:cursor-pointer"
+                        >
+                            Confirm
+                        </button>
                     </div>
 
                     {error && (
