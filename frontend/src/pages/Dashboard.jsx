@@ -30,7 +30,7 @@ const SORT_OPTIONS = {
 };
 
 export default function Dashboard() {
-    const PAGE_SIZE = 6;
+    const PAGE_SIZE = 2;
 
     const [allBills, setAllBills] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -211,7 +211,7 @@ export default function Dashboard() {
                     )}
 
                     <button
-                        onClick={p => Math.min(totalPages, p + 1)}
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                         disabled={isLast}
                         className="p-2 rounded-full disabled:opacity-50 not-disabled:hover:bg-gray-700 not-disabled:cursor-pointer"
                     >
