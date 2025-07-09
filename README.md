@@ -8,15 +8,15 @@
 - [x] Explain My Bills icon
 - [ ] Re-summarize button on bill result page
 - [ ] Report wrong summarization on bill result button on result page?
-- [ ] Analytics page
+- [x] Analytics page
 - [ ] Notifications page
 - [ ] Bills page
 - [x] Limit max recent summarized bills on Dashboard (implement pagination or just limit max)
 - [ ] Sort feature on Dashboard?
 - [ ] Implement forgot password
-- [ ] Further UI enhancements
 - [ ] Better error field for SignIn and SignUp
 - [ ] Show and hide password feature
+- [ ] Use toast instead of alerts
 
 ---
 
