@@ -1,6 +1,12 @@
 import { useState, useCallback } from "react";
+import { doc, getDoc, setDoc } from "firebase/firestore"; // ✅ doc (not collection)
+import { db } from "../../firebase/firebaseConfig";
 
 const API_URL = "http://localhost:8000";
+
+// Simple hash function using JSON.stringify (can be replaced with real hash)
+const generateDataHash = (bills) =>
+  JSON.stringify(bills.map((b) => [b.tooltipLabel, b.value]));
 
 export const UseAIAnalytics = () => {
   const [summary, setSummary] = useState("");
@@ -9,22 +15,21 @@ export const UseAIAnalytics = () => {
   const [error, setError] = useState("");
   const [cache, setCache] = useState({});
   const [lastFetched, setLastFetched] = useState({
+    userId: null,
     category: null,
     year: null,
   });
 
   const fetchAnalytics = useCallback(
-    async (bills, category, year) => {
-      const cacheKey = `${category}-${year}`;
-      if (lastFetched.category === category && lastFetched.year === year) {
+    async (bills, category, year, userId) => {
+      // ✅ Guard clause to prevent runtime errors
+      if (!userId || !category || !year || !Array.isArray(bills)) {
+        console.warn("Missing or invalid parameters for fetchAnalytics");
         return;
       }
 
-      if (cache[cacheKey]) {
-        const cached = cache[cacheKey];
-        setSummary(cached.summary);
-        setSuggestion(cached.suggestion);
-        setLastFetched({ category, year });
+      const cacheKey = `${category}-${year}`;
+      if (lastFetched.category === category && lastFetched.year === year) {
         return;
       }
 
@@ -32,23 +37,48 @@ export const UseAIAnalytics = () => {
       setError("");
 
       try {
+        // ✅ FIX: Use doc() instead of collection()
+        const docRef = doc(
+          db,
+          "users",
+          userId,
+          "analytics",
+          `${category}_${year}`
+        );
+        const docSnap = await getDoc(docRef);
+
         const payload = bills
           .slice(0, 12)
           .map((bill) => `Date: ${bill.tooltipLabel}, Value: ${bill.value}`)
           .join("\n");
 
-        if (!payload.trim()) {
-          setSummary("No data available for analysis.");
+        const currentHash = generateDataHash(bills);
+
+        if (!bills || bills.length === 0 || !payload.trim()) {
+          setSummary("No analysis available for the selected data.");
           setSuggestion("");
           setLastFetched({ category, year });
           return;
         }
 
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const savedHash = data.dataHash;
+
+          if (savedHash === currentHash) {
+            setSummary(data.summary || "No summary found.");
+            setSuggestion(data.suggestion || "No suggestion found.");
+            setLastFetched({ category, year });
+            console.log("✅ Loaded summary from Firestore cache (hash match)");
+            return;
+          }
+
+          console.log("⚠️ Bill data changed, regenerating summary...");
+        }
+
         const response = await fetch(`${API_URL}/bill/analytics`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ time_series_data: payload }),
           signal: AbortSignal.timeout(30000),
         });
@@ -56,7 +86,11 @@ export const UseAIAnalytics = () => {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
 
-          if (response.status === 429 || errorData.detail?.includes("429")) {
+          if (
+            response.status === 429 ||
+            (typeof errorData.detail === "string" &&
+              errorData.detail.includes("429"))
+          ) {
             throw new Error(
               "AI analysis limit reached. Please try again later."
             );
@@ -77,12 +111,7 @@ export const UseAIAnalytics = () => {
               ? JSON.parse(json.response)
               : json.response;
         } catch (parseErr) {
-          console.error(
-            "JSON parse error:",
-            parseErr,
-            "Raw response:",
-            json.response
-          );
+          console.error("JSON parse error:", parseErr, json.response);
           throw new Error("Invalid response format from AI service");
         }
 
@@ -93,6 +122,15 @@ export const UseAIAnalytics = () => {
         setSummary(summaryText);
         setSuggestion(suggestionText);
         setLastFetched({ category, year });
+
+        await setDoc(docRef, {
+          category,
+          year,
+          summary: summaryText,
+          suggestion: suggestionText,
+          dataHash: currentHash,
+          updatedAt: new Date(),
+        });
 
         setCache((prev) => ({
           ...prev,
