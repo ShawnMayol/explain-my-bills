@@ -30,7 +30,7 @@ const SORT_OPTIONS = {
 };
 
 export default function Dashboard() {
-    const PAGE_SIZE = 2;
+    const PAGE_SIZE = 6;
 
     const [allBills, setAllBills] = useState([]);
     const [loading, setLoading] = useState(true);
