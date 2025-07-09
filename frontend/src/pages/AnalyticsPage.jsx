@@ -133,11 +133,20 @@ export default function AnalyticsPage() {
     [category]
   );
 
-  const handleCategoryChange = useCallback((e) => {
-    setIsTransitioning(true);
-    setIsChartReady(false);
-    setCategory(e.target.value);
-  }, []);
+  const handleCategoryChange = useCallback(
+    (e) => {
+      const newCategory = e.target.value;
+
+      setIsTransitioning(true);
+      setIsChartReady(false);
+      setCategory(newCategory);
+
+      if (user?.uid) {
+        fetchBills(user.uid, newCategory);
+      }
+    },
+    [user?.uid, fetchBills]
+  );
 
   const handleYearChange = useCallback((e) => {
     setIsTransitioning(true);
@@ -145,11 +154,9 @@ export default function AnalyticsPage() {
     setSelectedYear(e.target.value ? +e.target.value : null);
   }, []);
 
-  // Chart loading state - includes transition state
   const isChartLoading = billsLoading || isTransitioning || !isChartReady;
   const hasChartData = filteredBills.length > 0 && selectedYear !== null;
 
-  // Set chart ready state when data is loaded
   useEffect(() => {
     if (isTransitioning) {
       const timer = setTimeout(() => {
@@ -182,10 +189,14 @@ export default function AnalyticsPage() {
   }, [user?.uid, category, fetchBills]);
 
   useEffect(() => {
-    if (filteredBills.length > 0) {
-      fetchAnalytics(filteredBills, category, selectedYear);
+    if (!billsLoading && selectedYear !== null) {
+      const filteredBills = allBills.filter(
+        (bill) => bill.year === selectedYear
+      );
+
+      fetchAnalytics(filteredBills, category, selectedYear, user.uid);
     }
-  }, [filteredBills, category, selectedYear, fetchAnalytics]);
+  }, [billsLoading, allBills, selectedYear, category, fetchAnalytics]);
 
   if (!user) {
     return (
@@ -197,10 +208,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="relative flex h-screen w-screen bg-[#1B1C21] text-white overflow-hidden">
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div
         className={`fixed top-0 left-0 right-0 z-30 md:hidden flex items-center h-12 px-4 py-7 transition-colors duration-300 bg-black/10`}

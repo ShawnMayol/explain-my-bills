@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, File, UploadFile
 from dotenv import load_dotenv
 import google.generativeai as genai
 from pydantic import BaseModel
+from typing import Optional
 import logging
 import json
 
@@ -53,6 +54,7 @@ logger = logging.getLogger(__name__)
 
 class AnalyticsRequest(BaseModel):
     time_series_data: str
+    skipAI: Optional[bool] = False
 
 
 @router.post("/bill_reading")
@@ -127,6 +129,13 @@ async def analytics(request: AnalyticsRequest):
     Expects a JSON body: {"time_series_data": "<string>"}
     """
     try:
+        if request.skipAI:
+            return {
+                "response": json.dumps(
+                    {"summary": "AI skipped (training mode enabled).", "suggestion": ""}
+                )
+            }
+
         # Validate input
         if not request.time_series_data:
             raise HTTPException(
@@ -229,19 +238,21 @@ async def bill_read_v2(prompt_imgs: list[UploadFile] = File(...)):
         """
 
         model = genai.GenerativeModel(model_name)
-        
+
         # Prepare parts for the request - start with text prompt
         parts = [{"text": dev_prompt}]
-        
+
         # Add each image as a separate part
         for prompt_img in prompt_imgs:
             img_bytes = await prompt_img.read()
-            parts.append({
-                "inline_data": {
-                    "mime_type": prompt_img.content_type or "image/png",
-                    "data": img_bytes,
+            parts.append(
+                {
+                    "inline_data": {
+                        "mime_type": prompt_img.content_type or "image/png",
+                        "data": img_bytes,
+                    }
                 }
-            })
+            )
 
         response = model.generate_content(
             [
