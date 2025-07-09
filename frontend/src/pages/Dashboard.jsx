@@ -1,75 +1,47 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import {
-    orderBy,
-    limit,
-    startAfter,
     collection,
     getDocs,
     query,
-    getCountFromServer,
 } from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
 import { HiChevronLeft, HiChevronRight, HiOutlineMenu } from "react-icons/hi";
 
+const CATEGORIES = [
+    { label: "All Categories", value: "all" },
+    { label: "Utility", value: "utility" },
+    { label: "Telecom", value: "telecom" },
+    { label: "Medical", value: "medical" },
+    { label: "Financial", value: "financial" },
+    { label: "Government", value: "government" },
+    { label: "Subscription", value: "subscription" },
+    { label: "Educational", value: "educational" },
+    { label: "Others", value: "others" },
+];
+
+const SORT_OPTIONS = {
+    createdAt_desc: { field: "createdAt", direction: "desc", label: "Date (Newest)" },
+    createdAt_asc: { field: "createdAt", direction: "asc", label: "Date (Oldest)" },
+    issuer_asc: { field: "issuer", direction: "asc", label: "Issuer (A-Z)" },
+    issuer_desc: { field: "issuer", direction: "desc", label: "Issuer (Z-A)" },
+};
+
 export default function Dashboard() {
     const PAGE_SIZE = 6;
 
-    const [bills, setBills] = useState([]);
-    const [pageCursors, setPageCursors] = useState([null]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+    const [allBills, setAllBills] = useState([]);
     const [loading, setLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    
+    const [filterCategory, setFilterCategory] = useState("all");
+    const [sortBy, setSortBy] = useState("createdAt_desc");
+    const [currentPage, setCurrentPage] = useState(1);
 
     const auth = getAuth();
     const user = auth.currentUser;
-
-    const initCount = async () => {
-        if (!user) return;
-        const colRef = collection(db, "users", user.uid, "bills");
-        const countSnap = await getCountFromServer(colRef);
-        const count = countSnap.data().count;
-        setTotalPages(Math.max(1, Math.ceil(count / PAGE_SIZE)));
-    };
-
-    const goToPage = async (pageNum, showLoader) => {
-        if (!user || pageNum < 1 || pageNum > totalPages) return;
-        if (showLoader) setLoading(true);
-
-        try {
-            let q = query(
-                collection(db, "users", user.uid, "bills"),
-                orderBy("createdAt", "desc"),
-                limit(PAGE_SIZE)
-            );
-
-            const cursor = pageCursors[pageNum - 1];
-            if (cursor) q = query(q, startAfter(cursor));
-
-            const snap = await getDocs(q);
-            const docs = snap.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            setBills(docs);
-
-            const lastDoc = snap.docs[snap.docs.length - 1] || null;
-            setPageCursors((prev) => {
-                const next = [...prev];
-                next[pageNum] = lastDoc;
-                return next;
-            });
-
-            setCurrentPage(pageNum);
-        } catch (err) {
-            console.error("Failed to load bills:", err);
-        } finally {
-            if (showLoader) setLoading(false);
-        }
-    };
 
     const getPageList = () => {
         const delta = 1;
@@ -96,14 +68,62 @@ export default function Dashboard() {
         return range;
     };
 
+    const fetchAllBills = async () => {
+        setLoading(true);
+        const billsRef = collection(db, "users", user.uid, "bills");
+        const q = query(billsRef);
+        const snap = await getDocs(q);
+        const docs = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        setAllBills(docs);
+        setLoading(false);
+    }
+
     useEffect(() => {
         if (!user) {
             console.warn("User not logged in");
             return;
         }
 
-        initCount().then(() => goToPage(1, true));
+        fetchAllBills();
     }, [user]);
+
+    const processedBills = useMemo(() => {
+        let bills = [...allBills];
+
+        if (filterCategory !== 'all') {
+            bills = bills.filter((bill) => bill.billType === filterCategory);
+        }
+
+        const sortOption = SORT_OPTIONS[sortBy];
+        bills.sort((a, b) => {
+            const fieldA = a[sortOption.field];
+            const fieldB = b[sortOption.field];
+            const direction = sortOption.direction === 'asc' ? 1 : -1;
+
+            if (typeof fieldA === 'string') {
+                return fieldA.localeCompare(fieldB) * direction;
+            }
+
+            if (fieldA < fieldB) return -1 * direction;
+            if (fieldA > fieldB) return 1 * direction;
+            return 0;
+        });
+
+        return bills;
+    }, [allBills, filterCategory, sortBy]);
+
+    const totalPages = Math.max(1, Math.ceil(processedBills.length / PAGE_SIZE));
+
+    const currentBills = useMemo(() => {
+        const startIndex = (currentPage - 1) * PAGE_SIZE;
+        const endIndex = startIndex + PAGE_SIZE;
+        return processedBills.slice(startIndex, endIndex);
+    }, [processedBills, currentPage]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterCategory, sortBy]);
 
     const isFirst = currentPage === 1;
     const isLast = currentPage === totalPages;
@@ -128,13 +148,46 @@ export default function Dashboard() {
             <div className="absolute -right-20 -bottom-40 w-90 h-90 rounded-full bg-gray-100 opacity-8 blur-3xl pointer-events-none z-0"></div>
 
             <div className="md:ml-[20%] flex-1 px-4 md:px-10 relative overflow-y-auto pb-10">
-                <h1 className="text-2xl md:text-4xl text-yellow-300 font-bold mt-12 md:mt-15 mb-8 md:mb-12">
+                <h1 className="text-2xl md:text-4xl text-yellow-300 font-bold mt-12 md:mt-15 mb-8 md:mb-14">
                     Recent Summarized Bills
                 </h1>
 
+                <div className="flex flex-col md:flex-row gap-4 mb-8">
+                    <div className="flex-1">
+                        <label htmlFor="filterCategory" className="mb-1 block text-sm font-medium text-gray-300">
+                            Filter by Category
+                        </label>
+                        <select
+                            id="filterCategory"
+                            value={filterCategory}
+                            onChange={(e) => setFilterCategory(e.target.value)}
+                            className="w-full bg-zinc-800 border-1 border-gray-600 rounded-md p-2 focus:ring-yellow-300 focus:border-yellow-300"
+                        >
+                            {CATEGORIES.map(cat => (
+                                <option key={cat.value} value={cat.value}>{cat.label}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex-1">
+                        <label htmlFor="sortBy" className="block text-sm font-medium text-gray-300 mb-1">
+                            Sort by
+                        </label>
+                        <select
+                            id="sortBy"
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="w-full bg-zinc-800 border-1 border-gray-600 rounded-md p-2 focus:ring-yellow-300 focus:border-yellow-300"
+                        >
+                            {Object.entries(SORT_OPTIONS).map(([key, { label }]) => (
+                                <option key={key} value={key}>{label}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
                 <div className="flex justify-center md:justify-start gap-1 mb-4 md:mb-6">
                     <button
-                        onClick={() => goToPage(currentPage - 1)}
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                         disabled={isFirst}
                         className="p-2 rounded-full disabled:opacity-50 not-disabled:hover:bg-gray-700 not-disabled:cursor-pointer"
                     >
@@ -149,12 +202,8 @@ export default function Dashboard() {
                         ) : (
                             <button
                                 key={p}
-                                onClick={() => goToPage(p)}
-                                className={`w-10 py-1 text-base border rounded cursor-pointer ${
-                                    p === currentPage
-                                        ? "bg-yellow-300 text-black"
-                                        : "hover:bg-gray-700"
-                                }`}
+                                onClick={() => setCurrentPage(p)}
+                                className={`w-10 py-1 text-base border rounded cursor-pointer ${p === currentPage ? "bg-yellow-300 text-black" : "hover:bg-gray-700"}`}
                             >
                                 {p}
                             </button>
@@ -162,7 +211,7 @@ export default function Dashboard() {
                     )}
 
                     <button
-                        onClick={() => goToPage(currentPage + 1)}
+                        onClick={p => Math.min(totalPages, p + 1)}
                         disabled={isLast}
                         className="p-2 rounded-full disabled:opacity-50 not-disabled:hover:bg-gray-700 not-disabled:cursor-pointer"
                     >
@@ -191,12 +240,12 @@ export default function Dashboard() {
                                 </div>
                             </div>
                         ))
-                    ) : bills.length > 0 ? (
-                        bills.map((bill) => (
+                    ) : currentBills.length > 0 ? (
+                        currentBills.map((bill) => (
                             <Link
                                 key={bill.id}
                                 to={`/bill/${bill.id}`}
-                                className="border border-gray-600 rounded-lg p-4 flex flex-col bg-zinc-900 hover:ring-2 hover:ring-yellow-300 transition h-[420px]"
+                                className="border border-gray-600 rounded-lg p-4 flex flex-col bg-[#1B1C21] hover:ring-2 hover:ring-yellow-300 transition h-[420px]"
                             >
                                 <div className="w-full h-48 rounded-lg mb-4 overflow-hidden bg-gray-800">
                                     {bill.imageUrl ? (
@@ -247,7 +296,7 @@ export default function Dashboard() {
 
                 <Link
                     to="/bill/summarization"
-                    className="fixed bottom-6 right-6 md:bottom-10 md:right-10 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-zinc-900 border-2 border-white text-2xl md:text-3xl font-semibold rounded-full hover:bg-yellow-300 hover:text-black transition shadow-lg"
+                    className="fixed bottom-6 right-6 md:bottom-10 md:right-10 w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-zinc-900 border-2 border-white text-2xl md:text-3xl font-semibold rounded-full hover:bg-yellow-300 hover:text-black transition shadow-lg"
                 >
                     +
                 </Link>
