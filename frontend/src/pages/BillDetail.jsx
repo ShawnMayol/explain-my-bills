@@ -56,17 +56,20 @@ export default function BillDetail() {
 
         setIsDeleting(true);
         try {
-            // Delete the image from Cloudinary if it exists
-            if (billData.imagePublicId) {
+            if (billData.publicId) {
+                console.log(
+                    "Deleting image with public ID:",
+                    billData.publicId
+                );
                 const response = await fetch(
-                    `${import.meta.env.VITE_API_URL}/delete-cloudinary`,
+                    "http://127.0.0.1:8000/delete-cloudinary",
                     {
                         method: "DELETE",
                         headers: {
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                            publicId: billData.imagePublicId,
+                            publicId: billData.publicId,
                         }),
                     }
                 );
@@ -76,10 +79,8 @@ export default function BillDetail() {
                 }
             }
 
-            // Delete the bill document from Firestore
             await deleteDoc(doc(db, "users", user.uid, "bills", billId));
 
-            // Navigate back to dashboard
             navigate("/dashboard");
         } catch (err) {
             console.error("Error deleting bill:", err);
