@@ -10,6 +10,8 @@ import { useAuth } from "../context/AuthContext";
 import SplashScreen from "../components/SplashScreen";
 import { FcGoogle } from "react-icons/fc";
 import { HiEye, HiEyeOff } from "react-icons/hi";
+import toast from "react-hot-toast";
+import { ThreeDot } from "react-loading-indicators";
 
 export default function SignIn() {
     const { user, loading } = useAuth();
@@ -17,8 +19,9 @@ export default function SignIn() {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
     if (loading) return <SplashScreen />;
     if (user) {
@@ -28,24 +31,125 @@ export default function SignIn() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
+
+        if (!email.trim()) {
+            toast.error("Please enter your email.", {
+                style: { fontSize: "16px" },
+            });
+            return;
+        }
+
+        if (!password.trim()) {
+            toast.error("Please enter your password.", {
+                style: { fontSize: "16px" },
+            });
+            return;
+        }
+
+        setIsSubmitting(true);
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
+            toast.success("Signed in successfully!", {
+                style: { fontSize: "16px" },
+            });
             navigate("/dashboard");
         } catch (err) {
-            setError("Invalid email or password.");
+            console.error("Sign in error:", err.code, err.message);
+
+            switch (err.code) {
+                case "auth/invalid-email":
+                    toast.error("Invalid email format.", {
+                        style: { fontSize: "16px" },
+                    });
+                    break;
+                case "auth/user-not-found":
+                    toast.error("No account found with this email.", {
+                        style: { fontSize: "16px" },
+                    });
+                    break;
+                case "auth/wrong-password":
+                    toast.error("Incorrect password.", {
+                        style: { fontSize: "16px" },
+                    });
+                    break;
+                case "auth/too-many-requests":
+                    toast.error(
+                        "Too many failed attempts. Please try again later.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    break;
+                case "auth/user-disabled":
+                    toast.error("This account has been disabled.", {
+                        style: { fontSize: "16px" },
+                    });
+                    break;
+                case "auth/network-request-failed":
+                    toast.error(
+                        "Network error. Please check your connection.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    break;
+                default:
+                    toast.error("Failed to sign in. Please try again.", {
+                        style: { fontSize: "16px" },
+                    });
+            }
+            setIsSubmitting(false);
         }
     };
 
     const handleGoogleSignIn = async () => {
+        setIsGoogleSubmitting(true);
+
         try {
             const provider = new GoogleAuthProvider();
             await signInWithPopup(auth, provider);
+            toast.success("Signed in with Google successfully!", {
+                style: { fontSize: "16px" },
+            });
             navigate("/dashboard");
         } catch (err) {
-            setError("Google sign-in failed.");
-            console.error(err);
+            console.error("Google sign in error:", err.code, err.message);
+
+            // Handle specific Google sign-in errors
+            switch (err.code) {
+                case "auth/popup-closed-by-user":
+                    toast.error("Sign-in canceled. Please try again.", {
+                        style: { fontSize: "16px" },
+                    });
+                    break;
+                case "auth/popup-blocked":
+                    toast.error(
+                        "Pop-up blocked by browser. Please allow pop-ups for this site.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    break;
+                case "auth/cancelled-popup-request":
+                    toast.error("Multiple pop-up requests. Please try again.", {
+                        style: { fontSize: "16px" },
+                    });
+                    break;
+                case "auth/account-exists-with-different-credential":
+                    toast.error(
+                        "An account already exists with the same email but different sign-in credentials.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    break;
+                default:
+                    toast.error("Google sign-in failed. Please try again.", {
+                        style: { fontSize: "16px" },
+                    });
+            }
+            setIsGoogleSubmitting(false);
         }
     };
 
@@ -106,16 +210,28 @@ export default function SignIn() {
                     Forgot Password?
                 </Link>
 
-                {error && (
-                    <p className="text-red-500 mb-4 text-center">{error}</p>
-                )}
-
                 <div className="flex flex-col items-center text-center">
                     <button
                         type="submit"
-                        className="p-3 text-lg border-2 border-white text-white font-semibold rounded-xl hover:bg-gray-100 hover:text-black transition w-full mb-4 hover:cursor-pointer"
+                        disabled={isSubmitting}
+                        className={`p-3 h-12 text-lg border-2 border-white text-white font-semibold rounded-xl transition w-full mb-4 flex items-center justify-center ${
+                            isSubmitting
+                                ? "opacity-70 cursor-not-allowed"
+                                : "hover:bg-gray-100 hover:text-black hover:cursor-pointer"
+                        }`}
                     >
-                        Sign In
+                        <div className="flex items-center justify-center h-full">
+                            {isSubmitting ? (
+                                <ThreeDot
+                                    color="#fde047"
+                                    size="small"
+                                    text=""
+                                    textColor=""
+                                />
+                            ) : (
+                                <span className="leading-none">Sign In</span>
+                            )}
+                        </div>
                     </button>
 
                     <div className="flex items-center w-full mb-4">
@@ -129,10 +245,30 @@ export default function SignIn() {
                     <button
                         type="button"
                         onClick={handleGoogleSignIn}
-                        className="flex items-center justify-center gap-3 p-3 text-lg border-2 border-white text-white font-semibold rounded-xl hover:bg-gray-100 hover:text-black transition w-full mb-6 hover:cursor-pointer"
+                        disabled={isGoogleSubmitting}
+                        className={`flex items-center justify-center gap-3 p-3 h-12 text-lg border-2 border-white text-white font-semibold rounded-xl transition w-full mb-6 ${
+                            isGoogleSubmitting
+                                ? "opacity-70 cursor-not-allowed"
+                                : "hover:bg-gray-100 hover:text-black hover:cursor-pointer"
+                        }`}
                     >
-                        <FcGoogle className="w-6 h-6" />
-                        Continue with Google
+                        <div className="flex items-center justify-center h-full gap-2">
+                            {isGoogleSubmitting ? (
+                                <ThreeDot
+                                    color="#fde047"
+                                    size="small"
+                                    text=""
+                                    textColor=""
+                                />
+                            ) : (
+                                <>
+                                    <FcGoogle className="w-6 h-6" />
+                                    <span className="leading-none">
+                                        Continue with Google
+                                    </span>
+                                </>
+                            )}
+                        </div>
                     </button>
 
                     <p className="text-sm text-gray-300">
