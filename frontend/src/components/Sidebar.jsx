@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate, NavLink } from "react-router-dom";
+import { useNavigate, NavLink, Link } from "react-router-dom";
 import { auth } from "../../firebase/firebaseConfig";
 import { signOut } from "firebase/auth";
 import { useAuth } from "../context/AuthContext";
@@ -99,16 +99,28 @@ export default function Sidebar({ isOpen, onClose }) {
                     <div>
                         <div className="flex items-center mb-10">
                             <div className="w-12 h-12 rounded-full flex items-center justify-center text-black font-extrabold text-2xl shadow">
-                                <img src={logo} alt="Explain My Bills Logo" />
+                                <Link to="/">
+                                    <img
+                                        src={logo}
+                                        alt="Explain My Bills Logo"
+                                    />
+                                </Link>
                             </div>
                             <span className="ml-4 text-xl font-extrabold text-yellow-300 tracking-wide drop-shadow hidden md:inline">
                                 Explain My Bills!
                             </span>
                         </div>
-
                         {user && (
                             <div className="ml-1 mb-1 text-lg text-white font-semibold">
-                                Hello, {user.displayName || "User"}!
+                                <span className="text-white font-medium">
+                                    {(() => {
+                                        const hour = new Date().getHours();
+                                        if (hour < 12) return "Good morning";
+                                        if (hour < 18) return "Good afternoon";
+                                        return "Good evening";
+                                    })()}
+                                </span>
+                                , {user.displayName || "User"}!
                             </div>
                         )}
                         <div className="ml-1 mb-6 text-sm text-gray-400">
