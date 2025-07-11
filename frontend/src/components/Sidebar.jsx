@@ -138,13 +138,13 @@ export default function Sidebar({ isOpen, onClose }) {
                         </nav>
                     </div>
 
-                    <button
+                    {/* <button
                         onClick={handleLogout}
                         className="flex items-center gap-3 mt-10 py-2 px-3 rounded-lg font-semibold text-yellow-300 hover:bg-red-500 hover:text-white transition text-sm cursor-pointer"
                     >
                         <HiOutlineLogout className="w-5 h-5" />
                         Sign-out
-                    </button>
+                    </button> */}
                 </div>
             </aside>
         </>
