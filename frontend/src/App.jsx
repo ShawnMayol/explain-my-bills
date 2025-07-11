@@ -22,7 +22,12 @@ import Test from "./pages/test.jsx";
 function App() {
     return (
         <>
-            <Toaster position="top-right" />
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    duration: 10000, // 10 seconds
+                }}
+            />
             <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/signup" element={<SignUp />} />
