@@ -7,6 +7,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
 import { useAuth } from "../context/AuthContext";
+import { HiEye, HiEyeOff } from "react-icons/hi";
 
 export default function ChangePassword() {
     const { user } = useAuth();
@@ -17,6 +18,9 @@ export default function ChangePassword() {
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [showOldPassword, setShowOldPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const isGoogle = user?.providerData.some(
         (p) => p.providerId === "google.com"
@@ -24,7 +28,10 @@ export default function ChangePassword() {
 
     useEffect(() => {
         if (isGoogle) {
-            window.open("https://myaccount.google.com/security/signinoptions/password", "_blank");
+            window.open(
+                "https://myaccount.google.com/security/signinoptions/password",
+                "_blank"
+            );
             navigate("/profile");
         }
     }, [isGoogle, navigate]);
@@ -65,6 +72,18 @@ export default function ChangePassword() {
         }
     };
 
+    const toggleOldPassword = () => {
+        setShowOldPassword((prev) => !prev);
+    };
+
+    const toggleNewPassword = () => {
+        setShowNewPassword((prev) => !prev);
+    };
+
+    const toggleConfirmPassword = () => {
+        setShowConfirmPassword((prev) => !prev);
+    };
+
     if (isGoogle) {
         return null;
     }
@@ -79,34 +98,90 @@ export default function ChangePassword() {
                     onSubmit={handleSubmit}
                     className="flex flex-col items-center gap-5 w-full"
                 >
-                    <input
-                        type="password"
-                        value={oldPassword}
-                        onChange={(e) => setOldPassword(e.target.value)}
-                        className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                        placeholder="Old Password"
-                        autoComplete="current-password"
-                    />
-                    <input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                        placeholder="New Password"
-                        autoComplete="new-password"
-                    />
-                    <input
-                        type="password"
-                        value={confirmNewPassword}
-                        onChange={(e) =>
-                            setConfirmNewPassword(e.target.value)
-                        }
-                        className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                        placeholder="Confirm New Password"
-                        autoComplete="new-password"
-                    />
+                    <div className="relative w-full">
+                        <input
+                            type={showOldPassword ? "text" : "password"}
+                            value={oldPassword}
+                            onChange={(e) => setOldPassword(e.target.value)}
+                            className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                            placeholder="Old Password"
+                            autoComplete="current-password"
+                        />
+                        <button
+                            type="button"
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none cursor-pointer"
+                            onClick={() => setShowOldPassword(!showOldPassword)}
+                            aria-label={
+                                showOldPassword
+                                    ? "Hide password"
+                                    : "Show password"
+                            }
+                        >
+                            {showOldPassword ? (
+                                <HiEyeOff size={20} />
+                            ) : (
+                                <HiEye size={20} />
+                            )}
+                        </button>
+                    </div>
+                    <div className="relative w-full">
+                        <input
+                            type={showNewPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                            placeholder="New Password"
+                            autoComplete="new-password"
+                        />
+                        <button
+                            type="button"
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none cursor-pointer"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            aria-label={
+                                showNewPassword
+                                    ? "Hide password"
+                                    : "Show password"
+                            }
+                        >
+                            {showNewPassword ? (
+                                <HiEyeOff size={20} />
+                            ) : (
+                                <HiEye size={20} />
+                            )}
+                        </button>
+                    </div>
+                    <div className="relative w-full">
+                        <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={confirmNewPassword}
+                            onChange={(e) =>
+                                setConfirmNewPassword(e.target.value)
+                            }
+                            className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                            placeholder="Confirm New Password"
+                            autoComplete="new-password"
+                        />
+                        <button
+                            type="button"
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none cursor-pointer"
+                            onClick={() =>
+                                setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            aria-label={
+                                showConfirmPassword
+                                    ? "Hide password"
+                                    : "Show password"
+                            }
+                        >
+                            {showConfirmPassword ? (
+                                <HiEyeOff size={20} />
+                            ) : (
+                                <HiEye size={20} />
+                            )}
+                        </button>
+                    </div>
 
-                    <div className="flex flex-col sm:flex-row gap-4 mt-2 w-full">
+                    <div className="flex flex-col sm:flex-row gap-4 mt-4 w-full">
                         <button
                             type="button"
                             onClick={() => navigate("/profile")}
