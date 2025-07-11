@@ -49,9 +49,29 @@ export default function SignIn() {
         setIsSubmitting(true);
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            toast.success("Signed in successfully!", {
+            const userCredential = await signInWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+            const displayName =
+                userCredential.user.displayName || email.split("@")[0];
+
+            const welcomeMessages = [
+                `Welcome back, ${displayName}!`,
+                `Great to see you again, ${displayName}!`,
+                `Hello, ${displayName}! Ready to explore?`,
+                `You're in, ${displayName}!`,
+                `Welcome aboard, ${displayName}!`,
+            ];
+            const randomMessage =
+                welcomeMessages[
+                    Math.floor(Math.random() * welcomeMessages.length)
+                ];
+
+            toast.success(randomMessage, {
                 style: { fontSize: "16px" },
+                icon: "👋",
             });
             navigate("/dashboard");
         } catch (err) {
@@ -108,15 +128,30 @@ export default function SignIn() {
 
         try {
             const provider = new GoogleAuthProvider();
-            await signInWithPopup(auth, provider);
-            toast.success("Signed in with Google successfully!", {
+            const result = await signInWithPopup(auth, provider);
+            const displayName =
+                result.user.displayName || result.user.email.split("@")[0];
+
+            const welcomeMessages = [
+                `Welcome, ${displayName}!`,
+                `Great to see you, ${displayName}!`,
+                `Hello, ${displayName}!`,
+                `You're in, ${displayName}!`,
+                `Welcome aboard, ${displayName}!`,
+            ];
+            const randomMessage =
+                welcomeMessages[
+                    Math.floor(Math.random() * welcomeMessages.length)
+                ];
+
+            toast.success(randomMessage, {
                 style: { fontSize: "16px" },
+                icon: "👋",
             });
             navigate("/dashboard");
         } catch (err) {
             console.error("Google sign in error:", err.code, err.message);
 
-            // Handle specific Google sign-in errors
             switch (err.code) {
                 case "auth/popup-closed-by-user":
                     toast.error("Sign-in canceled. Please try again.", {
