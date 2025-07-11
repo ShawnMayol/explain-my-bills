@@ -6,6 +6,7 @@ import { auth } from "../../firebase/firebaseConfig";
 import { useAuth } from "../context/AuthContext";
 import SplashScreen from "../components/SplashScreen";
 import { FcGoogle } from "react-icons/fc";
+import { HiEye, HiEyeOff } from "react-icons/hi";
 
 export default function SignUp() {
     const { user, loading } = useAuth();
@@ -16,6 +17,8 @@ export default function SignUp() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     if (loading) return <SplashScreen />;
     if (user) {
@@ -92,22 +95,58 @@ export default function SignUp() {
                     onChange={(e) => setEmail(e.target.value)}
                     autoComplete="email"
                 />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    className="mb-4 p-3 rounded-xl bg-zinc-900 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="new-password"
-                />
-                <input
-                    type="password"
-                    placeholder="Confirm Password"
-                    className="mb-4 p-3 rounded-xl bg-zinc-900 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    autoComplete="new-password"
-                />
+                <div className="relative mb-4">
+                    <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Password"
+                        className="p-3 w-full rounded-xl bg-zinc-900 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        autoComplete="new-password"
+                    />
+                    <button
+                        type="button"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none cursor-pointer"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                        }
+                    >
+                        {showPassword ? (
+                            <HiEyeOff size={20} />
+                        ) : (
+                            <HiEye size={20} />
+                        )}
+                    </button>
+                </div>
+                <div className="relative mb-4">
+                    <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm Password"
+                        className="p-3 w-full rounded-xl bg-zinc-900 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        autoComplete="new-password"
+                    />
+                    <button
+                        type="button"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none cursor-pointer"
+                        onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        aria-label={
+                            showConfirmPassword
+                                ? "Hide password"
+                                : "Show password"
+                        }
+                    >
+                        {showConfirmPassword ? (
+                            <HiEyeOff size={20} />
+                        ) : (
+                            <HiEye size={20} />
+                        )}
+                    </button>
+                </div>
 
                 {error && (
                     <p className="text-red-500 mb-4 text-center">{error}</p>

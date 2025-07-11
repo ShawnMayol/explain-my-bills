@@ -88,9 +88,15 @@ export default function SignIn() {
                         type="button"
                         className="absolute right-4 cursor-pointer top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none"
                         onClick={() => setShowPassword(!showPassword)}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                        }
                     >
-                        {showPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
+                        {showPassword ? (
+                            <HiEyeOff size={20} />
+                        ) : (
+                            <HiEye size={20} />
+                        )}
                     </button>
                 </div>
 
