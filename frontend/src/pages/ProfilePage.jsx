@@ -26,13 +26,11 @@ export default function ProfilePage() {
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
             if (currentUser) {
-                // Get user's display name or email as fallback
                 const displayName =
                     currentUser.displayName ||
                     currentUser.email?.split("@")[0] ||
                     "User";
 
-                // Format join date
                 const joinDate = currentUser.metadata.creationTime
                     ? new Date(
                           currentUser.metadata.creationTime
@@ -49,7 +47,6 @@ export default function ProfilePage() {
                     avatar: currentUser.photoURL || null,
                 });
             } else {
-                // User is not authenticated, redirect to login
                 navigate("/");
             }
         });
@@ -59,11 +56,23 @@ export default function ProfilePage() {
 
     const handleLogout = async () => {
         try {
+            const username = user.name;
+
             await signOut(auth);
-            toast.success("Come back soon!", {
-                style: {
-                    fontSize: "16px",
-                },
+
+            const goodbyeMessages = [
+                `See you soon, ${username}!`,
+                `Goodbye, ${username}! Come back anytime!`,
+                `Thanks for using Explain My Bills, ${username}!`,
+                `Have a great day, ${username}!`,
+            ];
+            const randomMessage =
+                goodbyeMessages[
+                    Math.floor(Math.random() * goodbyeMessages.length)
+                ];
+
+            toast.success(randomMessage, {
+                style: { fontSize: "16px" },
                 icon: "👋",
             });
             navigate("/");
@@ -94,7 +103,6 @@ export default function ProfilePage() {
             </div>
 
             <div className="md:ml-[20%] flex-1 flex flex-col p-4 sm:p-6 pt-16 sm:pt-20 md:pt-6 overflow-y-auto">
-                {/* Profile Header */}
                 <div className="mb-6 sm:mb-8">
                     <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
                         Profile
@@ -105,7 +113,6 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="max-w-4xl mx-auto w-full space-y-4 sm:space-y-6">
-                    {/* Profile Information Card */}
                     <div className="bg-[#2A2B32] rounded-lg p-4 sm:p-6 border border-gray-700">
                         <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 flex items-center gap-2">
                             <HiUser className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-300" />
@@ -113,7 +120,6 @@ export default function ProfilePage() {
                         </h2>
 
                         <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4 sm:gap-6">
-                            {/* Avatar */}
                             <div className="flex-shrink-0 order-1 lg:order-none">
                                 {user.avatar ? (
                                     <img
@@ -128,7 +134,6 @@ export default function ProfilePage() {
                                 )}
                             </div>
 
-                            {/* User Details */}
                             <div className="flex-1 space-y-3 sm:space-y-4 w-full order-2 lg:order-none">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
                                     <div>
@@ -168,7 +173,6 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* Account Settings Card */}
                     <div className="bg-[#2A2B32] rounded-lg p-6 border border-gray-700">
                         <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
                             <HiCog className="w-5 h-5 text-yellow-300" />
