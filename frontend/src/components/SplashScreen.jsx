@@ -11,9 +11,6 @@ export default function SplashScreen() {
                     size="medium"
                     textColor="#facc15"
                 />
-                <p className="text-xl font-semibold text-yellow-300 tracking-wide">
-                    Loading...
-                </p>
             </div>
         </div>
     );
