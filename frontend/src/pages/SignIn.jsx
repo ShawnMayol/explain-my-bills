@@ -75,7 +75,7 @@ export default function SignIn() {
                     onChange={(e) => setEmail(e.target.value)}
                     autoComplete="email"
                 />
-                <div className="relative mb-4">
+                <div className="relative">
                     <input
                         type={showPassword ? "text" : "password"}
                         placeholder="Password"
@@ -99,6 +99,12 @@ export default function SignIn() {
                         )}
                     </button>
                 </div>
+                <Link
+                    to="/forgot-password"
+                    className="text-sm text-end text-gray-300 hover:text-yellow-300 transition mb-4 mt-1"
+                >
+                    Forgot Password?
+                </Link>
 
                 {error && (
                     <p className="text-red-500 mb-4 text-center">{error}</p>
