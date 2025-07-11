@@ -2,11 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
 import { getAuth } from "firebase/auth";
-import {
-    collection,
-    getDocs,
-    query,
-} from "firebase/firestore";
+import { collection, getDocs, query } from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
 import { HiChevronLeft, HiChevronRight, HiOutlineMenu } from "react-icons/hi";
 
@@ -23,8 +19,16 @@ const CATEGORIES = [
 ];
 
 const SORT_OPTIONS = {
-    createdAt_desc: { field: "createdAt", direction: "desc", label: "Date (Newest)" },
-    createdAt_asc: { field: "createdAt", direction: "asc", label: "Date (Oldest)" },
+    createdAt_desc: {
+        field: "createdAt",
+        direction: "desc",
+        label: "Date (Newest)",
+    },
+    createdAt_asc: {
+        field: "createdAt",
+        direction: "asc",
+        label: "Date (Oldest)",
+    },
     issuer_asc: { field: "issuer", direction: "asc", label: "Issuer (A-Z)" },
     issuer_desc: { field: "issuer", direction: "desc", label: "Issuer (Z-A)" },
 };
@@ -35,7 +39,7 @@ export default function Dashboard() {
     const [allBills, setAllBills] = useState([]);
     const [loading, setLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    
+
     const [filterCategory, setFilterCategory] = useState("all");
     const [sortBy, setSortBy] = useState("createdAt_desc");
     const [currentPage, setCurrentPage] = useState(1);
@@ -77,7 +81,7 @@ export default function Dashboard() {
 
         setAllBills(docs);
         setLoading(false);
-    }
+    };
 
     useEffect(() => {
         if (!user) {
@@ -91,7 +95,7 @@ export default function Dashboard() {
     const processedBills = useMemo(() => {
         let bills = [...allBills];
 
-        if (filterCategory !== 'all') {
+        if (filterCategory !== "all") {
             bills = bills.filter((bill) => bill.billType === filterCategory);
         }
 
@@ -99,9 +103,9 @@ export default function Dashboard() {
         bills.sort((a, b) => {
             const fieldA = a[sortOption.field];
             const fieldB = b[sortOption.field];
-            const direction = sortOption.direction === 'asc' ? 1 : -1;
+            const direction = sortOption.direction === "asc" ? 1 : -1;
 
-            if (typeof fieldA === 'string') {
+            if (typeof fieldA === "string") {
                 return fieldA.localeCompare(fieldB) * direction;
             }
 
@@ -113,7 +117,10 @@ export default function Dashboard() {
         return bills;
     }, [allBills, filterCategory, sortBy]);
 
-    const totalPages = Math.max(1, Math.ceil(processedBills.length / PAGE_SIZE));
+    const totalPages = Math.max(
+        1,
+        Math.ceil(processedBills.length / PAGE_SIZE)
+    );
 
     const currentBills = useMemo(() => {
         const startIndex = (currentPage - 1) * PAGE_SIZE;
@@ -148,13 +155,16 @@ export default function Dashboard() {
             <div className="absolute -right-20 -bottom-40 w-90 h-90 rounded-full bg-gray-100 opacity-8 blur-3xl pointer-events-none z-0"></div>
 
             <div className="md:ml-[20%] flex-1 px-4 md:px-10 relative overflow-y-auto pb-10">
-                <h1 className="text-2xl md:text-4xl text-yellow-300 font-bold mt-12 md:mt-15 mb-8 md:mb-14">
+                <h1 className="text-2xl mt-14 md:text-4xl text-yellow-300 font-bold mb-4 md:mb-10">
                     Recent Summarized Bills
                 </h1>
 
                 <div className="flex flex-col md:flex-row gap-4 mb-8">
                     <div className="flex-1">
-                        <label htmlFor="filterCategory" className="mb-1 block text-sm font-medium text-gray-300">
+                        <label
+                            htmlFor="filterCategory"
+                            className="mb-1 block text-sm font-medium text-gray-300"
+                        >
                             Filter by Category
                         </label>
                         <select
@@ -163,13 +173,18 @@ export default function Dashboard() {
                             onChange={(e) => setFilterCategory(e.target.value)}
                             className="w-full bg-zinc-800 border-1 border-gray-600 rounded-md p-2 focus:ring-yellow-300 focus:border-yellow-300"
                         >
-                            {CATEGORIES.map(cat => (
-                                <option key={cat.value} value={cat.value}>{cat.label}</option>
+                            {CATEGORIES.map((cat) => (
+                                <option key={cat.value} value={cat.value}>
+                                    {cat.label}
+                                </option>
                             ))}
                         </select>
                     </div>
                     <div className="flex-1">
-                        <label htmlFor="sortBy" className="block text-sm font-medium text-gray-300 mb-1">
+                        <label
+                            htmlFor="sortBy"
+                            className="block text-sm font-medium text-gray-300 mb-1"
+                        >
                             Sort by
                         </label>
                         <select
@@ -178,16 +193,22 @@ export default function Dashboard() {
                             onChange={(e) => setSortBy(e.target.value)}
                             className="w-full bg-zinc-800 border-1 border-gray-600 rounded-md p-2 focus:ring-yellow-300 focus:border-yellow-300"
                         >
-                            {Object.entries(SORT_OPTIONS).map(([key, { label }]) => (
-                                <option key={key} value={key}>{label}</option>
-                            ))}
+                            {Object.entries(SORT_OPTIONS).map(
+                                ([key, { label }]) => (
+                                    <option key={key} value={key}>
+                                        {label}
+                                    </option>
+                                )
+                            )}
                         </select>
                     </div>
                 </div>
 
                 <div className="flex justify-center md:justify-start gap-1 mb-4 md:mb-6">
                     <button
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        onClick={() =>
+                            setCurrentPage((p) => Math.max(1, p - 1))
+                        }
                         disabled={isFirst}
                         className="p-2 rounded-full disabled:opacity-50 not-disabled:hover:bg-gray-700 not-disabled:cursor-pointer"
                     >
@@ -203,7 +224,11 @@ export default function Dashboard() {
                             <button
                                 key={p}
                                 onClick={() => setCurrentPage(p)}
-                                className={`w-10 py-1 text-base border rounded cursor-pointer ${p === currentPage ? "bg-yellow-300 text-black" : "hover:bg-gray-700"}`}
+                                className={`w-10 py-1 text-base border rounded cursor-pointer ${
+                                    p === currentPage
+                                        ? "bg-yellow-300 text-black"
+                                        : "hover:bg-gray-700"
+                                }`}
                             >
                                 {p}
                             </button>
@@ -211,7 +236,9 @@ export default function Dashboard() {
                     )}
 
                     <button
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        onClick={() =>
+                            setCurrentPage((p) => Math.min(totalPages, p + 1))
+                        }
                         disabled={isLast}
                         className="p-2 rounded-full disabled:opacity-50 not-disabled:hover:bg-gray-700 not-disabled:cursor-pointer"
                     >
@@ -263,7 +290,9 @@ export default function Dashboard() {
                                 <div className="flex-1 flex flex-col justify-between">
                                     <div>
                                         <p className="text-lg font-semibold text-center mb-3 text-yellow-300">
-                                            {bill.issuer || bill.billType || "Unnamed Bill"}
+                                            {bill.issuer ||
+                                                bill.billType ||
+                                                "Unnamed Bill"}
                                         </p>
                                         <p className="text-sm text-gray-300 text-justify line-clamp-4">
                                             {bill.explanation?.slice(0, 256) ||
@@ -272,14 +301,13 @@ export default function Dashboard() {
                                     </div>
                                     <p className="text-xs text-gray-400 mt-4 text-end">
                                         {bill.billDate
-                                            ? new Date(bill.billDate).toLocaleDateString(
-                                                  "en-US",
-                                                  {
-                                                      year: "numeric",
-                                                      month: "long",
-                                                      day: "numeric",
-                                                  }
-                                              )
+                                            ? new Date(
+                                                  bill.billDate
+                                              ).toLocaleDateString("en-US", {
+                                                  year: "numeric",
+                                                  month: "long",
+                                                  day: "numeric",
+                                              })
                                             : "—"}
                                     </p>
                                 </div>
