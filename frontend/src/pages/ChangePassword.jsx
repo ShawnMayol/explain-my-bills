@@ -8,6 +8,8 @@ import {
 import { auth } from "../../firebase/firebaseConfig";
 import { useAuth } from "../context/AuthContext";
 import { HiEye, HiEyeOff } from "react-icons/hi";
+import toast from "react-hot-toast";
+import { ThreeDot } from "react-loading-indicators";
 
 export default function ChangePassword() {
     const { user } = useAuth();
@@ -16,11 +18,11 @@ export default function ChangePassword() {
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
     const [showOldPassword, setShowOldPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [validationError, setValidationError] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const isGoogle = user?.providerData.some(
         (p) => p.providerId === "google.com"
@@ -38,21 +40,34 @@ export default function ChangePassword() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
-        setSuccess("");
+        setValidationError("");
 
         if (!oldPassword || !newPassword || !confirmNewPassword) {
-            setError("Please fill in all fields.");
+            toast.error("Please fill in all fields.", {
+                style: {
+                    fontSize: "16px",
+                },
+            });
             return;
         }
         if (newPassword !== confirmNewPassword) {
-            setError("New passwords do not match.");
+            toast.error("New passwords do not match.", {
+                style: {
+                    fontSize: "16px",
+                },
+            });
             return;
         }
         if (newPassword.length < 6) {
-            setError("New password must be at least 6 characters.");
+            toast.error("New password must be at least 6 characters.", {
+                style: {
+                    fontSize: "16px",
+                },
+            });
             return;
         }
+
+        setIsSubmitting(true);
 
         try {
             const credential = EmailAuthProvider.credential(
@@ -61,27 +76,28 @@ export default function ChangePassword() {
             );
             await reauthenticateWithCredential(user, credential);
             await updatePassword(user, newPassword);
-            setSuccess("Password changed successfully!");
-            setTimeout(() => navigate("/profile"), 1000);
+            toast.success("Password changed successfully!", {
+                style: {
+                    fontSize: "16px",
+                },
+            });
+            navigate("/profile");
         } catch (err) {
             if (err.code === "auth/wrong-password") {
-                setError("Old password is incorrect.");
+                toast.error("Old password is incorrect.", {
+                    style: {
+                        fontSize: "16px",
+                    },
+                });
             } else {
-                setError("Failed to change password. Please try again.");
+                toast.error("Failed to change password. Please try again.", {
+                    style: {
+                        fontSize: "16px",
+                    },
+                });
             }
+            setIsSubmitting(false);
         }
-    };
-
-    const toggleOldPassword = () => {
-        setShowOldPassword((prev) => !prev);
-    };
-
-    const toggleNewPassword = () => {
-        setShowNewPassword((prev) => !prev);
-    };
-
-    const toggleConfirmPassword = () => {
-        setShowConfirmPassword((prev) => !prev);
     };
 
     if (isGoogle) {
@@ -103,7 +119,7 @@ export default function ChangePassword() {
                             type={showOldPassword ? "text" : "password"}
                             value={oldPassword}
                             onChange={(e) => setOldPassword(e.target.value)}
-                            className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                            className="w-full border border-gray-600 rounded-xl p-3 pr-12 bg-zinc-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                             placeholder="Old Password"
                             autoComplete="current-password"
                         />
@@ -128,8 +144,30 @@ export default function ChangePassword() {
                         <input
                             type={showNewPassword ? "text" : "password"}
                             value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                            onChange={(e) => {
+                                const newValue = e.target.value;
+                                setNewPassword(newValue);
+
+                                if (
+                                    newValue.length > 0 &&
+                                    newValue.length < 6
+                                ) {
+                                    setValidationError(
+                                        "Password must be at least 6 characters"
+                                    );
+                                } else {
+                                    setValidationError("");
+                                }
+                            }}
+                            className={`w-full border ${
+                                validationError
+                                    ? "border-red-500"
+                                    : "border-gray-600"
+                            } rounded-xl p-3 pr-12 bg-zinc-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                                validationError
+                                    ? "focus:ring-red-500"
+                                    : "focus:ring-yellow-300"
+                            }`}
                             placeholder="New Password"
                             autoComplete="new-password"
                         />
@@ -149,6 +187,18 @@ export default function ChangePassword() {
                                 <HiEye size={20} />
                             )}
                         </button>
+                        {validationError && (
+                            <div className="absolute left-full ml-4 top-1/2 transform -translate-y-1/2 bg-red-500 text-white text-sm px-4 py-1.5 rounded shadow-lg max-w-2xl z-10 sm:block hidden text-center w-1/2">
+                                {validationError}
+                                <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-8 border-transparent border-r-red-500"></div>
+                            </div>
+                        )}
+                        {validationError && (
+                            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full mb-2 bg-red-500 text-white text-sm px-3 py-1.5 rounded shadow-lg max-w-xs z-10 sm:hidden block mt-[-10px] text-center w-full">
+                                {validationError}
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-red-500"></div>
+                            </div>
+                        )}
                     </div>
                     <div className="relative w-full">
                         <input
@@ -157,7 +207,7 @@ export default function ChangePassword() {
                             onChange={(e) =>
                                 setConfirmNewPassword(e.target.value)
                             }
-                            className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                            className="w-full border border-gray-600 rounded-xl p-3 pr-12 bg-zinc-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                             placeholder="Confirm New Password"
                             autoComplete="new-password"
                         />
@@ -185,27 +235,35 @@ export default function ChangePassword() {
                         <button
                             type="button"
                             onClick={() => navigate("/profile")}
-                            className="flex-1 border-2 border-white rounded-full px-7 py-2 font-semibold text-white hover:bg-yellow-300 hover:text-black transition hover:cursor-pointer"
+                            className="flex-1 border-2 border-white rounded-full px-7 py-3 font-semibold text-white hover:bg-yellow-300 hover:text-black transition hover:cursor-pointer leading-none"
+                            disabled={isSubmitting}
                         >
                             Cancel
                         </button>
 
                         <button
                             type="submit"
-                            className="flex-1 border-2 border-white rounded-full px-7 py-2 font-semibold text-white hover:bg-yellow-300 hover:text-black transition hover:cursor-pointer"
+                            className={`flex-1 border-2 border-white rounded-full px-7 py-3 font-semibold text-white transition flex items-center justify-center gap-2 h-12 ${
+                                isSubmitting
+                                    ? "opacity-70 cursor-not-allowed"
+                                    : "hover:bg-yellow-300 hover:text-black hover:cursor-pointer"
+                            }`}
+                            disabled={isSubmitting}
                         >
-                            Confirm
+                            <div className="flex items-center justify-center h-full">
+                                {isSubmitting ? (
+                                    <ThreeDot
+                                        color="#fde047"
+                                        size="small"
+                                        text=""
+                                        textColor=""
+                                    />
+                                ) : (
+                                    <span className="leading-none">Save</span>
+                                )}
+                            </div>
                         </button>
                     </div>
-
-                    {error && (
-                        <div className="text-red-500 text-sm mt-2">{error}</div>
-                    )}
-                    {success && (
-                        <div className="text-green-400 text-sm mt-2">
-                            {success}
-                        </div>
-                    )}
                 </form>
             </div>
         </div>

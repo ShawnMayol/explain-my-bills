@@ -4,6 +4,7 @@ import { updateProfile } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
+import { ThreeDot } from "react-loading-indicators";
 
 export default function EditUsername() {
     const { user } = useAuth();
@@ -81,7 +82,7 @@ export default function EditUsername() {
                 },
             });
 
-            setTimeout(() => navigate("/profile"), 1500);
+            navigate("/profile");
         } catch (err) {
             toast.error("Failed to update username.", {
                 style: {
@@ -180,7 +181,7 @@ export default function EditUsername() {
                         </button>
                         <button
                             type="submit"
-                            className={`flex-1 border-2 border-white rounded-full px-7 py-2 font-semibold text-white transition ${
+                            className={`flex-1 border-2 border-white rounded-full px-7 py-3 font-semibold text-white transition flex items-center justify-center gap-2 h-12 ${
                                 isSubmitting ||
                                 !isValidUsername(username) ||
                                 !hasChanged
@@ -193,7 +194,18 @@ export default function EditUsername() {
                                 !hasChanged
                             }
                         >
-                            {isSubmitting ? "Saving..." : "Save"}
+                            <div className="flex items-center justify-center h-full">
+                                {isSubmitting ? (
+                                    <ThreeDot
+                                        color="#fde047"
+                                        size="small"
+                                        text=""
+                                        textColor=""
+                                    />
+                                ) : (
+                                    <span className="leading-none">Save</span>
+                                )}
+                            </div>
                         </button>
                     </div>
                 </form>
