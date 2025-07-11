@@ -11,6 +11,7 @@ import {
     HiCog,
     HiLogout,
 } from "react-icons/hi";
+import toast from "react-hot-toast";
 
 export default function ProfilePage() {
     const navigate = useNavigate();
@@ -59,9 +60,20 @@ export default function ProfilePage() {
     const handleLogout = async () => {
         try {
             await signOut(auth);
+            toast.success("Come back soon!", {
+                style: {
+                    fontSize: "16px",
+                },
+                icon: "👋",
+            });
             navigate("/");
         } catch (error) {
             console.error("Error signing out:", error);
+            toast.error("Error signing out. Please try again.", {
+                style: {
+                    fontSize: "16px",
+                },
+            });
         }
     };
 
