@@ -83,18 +83,71 @@ export default function ChangePassword() {
             });
             navigate("/profile");
         } catch (err) {
-            if (err.code === "auth/wrong-password") {
-                toast.error("Old password is incorrect.", {
-                    style: {
-                        fontSize: "16px",
-                    },
-                });
-            } else {
-                toast.error("Failed to change password. Please try again.", {
-                    style: {
-                        fontSize: "16px",
-                    },
-                });
+            console.error("Password change error:", err.code, err.message);
+
+            // Handle specific Firebase authentication errors
+            switch (err.code) {
+                case "auth/wrong-password":
+                    toast.error("Old password is incorrect.", {
+                        style: { fontSize: "16px" },
+                    });
+                    break;
+                case "auth/weak-password":
+                    toast.error(
+                        "Password is too weak. Choose a stronger password.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    break;
+                case "auth/requires-recent-login":
+                    toast.error(
+                        "This action requires recent authentication. Please log in again.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    setTimeout(() => {
+                        // Sign out the user and redirect to login
+                        auth.signOut().then(() => navigate("/signin"));
+                    }, 2000);
+                    break;
+                case "auth/user-token-expired":
+                    toast.error(
+                        "Your session has expired. Please log in again.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    setTimeout(() => {
+                        auth.signOut().then(() => navigate("/signin"));
+                    }, 2000);
+                    break;
+                case "auth/too-many-requests":
+                    toast.error(
+                        "Too many unsuccessful attempts. Please try again later.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    break;
+                case "auth/network-request-failed":
+                    toast.error(
+                        "Network error. Please check your internet connection.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    break;
+                default:
+                    toast.error(
+                        `Failed to change password: ${
+                            err.message || "Please try again."
+                        }`,
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
             }
             setIsSubmitting(false);
         }
