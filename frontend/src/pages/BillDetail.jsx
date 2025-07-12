@@ -250,7 +250,7 @@ export default function BillDetail() {
 
                         <div className="flex flex-col md:flex-row gap-12">
                             <div className="flex-shrink-0 flex flex-col items-center">
-                                <div className="w-[300px] h-[400px] bg-zinc-900 border-2 rounded-lg flex items-center justify-center mb-4">
+                                <div className="w-[400px] h-[400px] bg-zinc-900 border-2 rounded-lg flex items-center justify-center mb-4">
                                     <div className="w-full h-full bg-zinc-800 rounded animate-pulse"></div>
                                 </div>
                             </div>
