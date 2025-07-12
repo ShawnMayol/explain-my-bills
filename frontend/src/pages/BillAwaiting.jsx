@@ -18,8 +18,10 @@ export default function BillAwaiting() {
     }, [loading]);
 
     useEffect(() => {
-        const file = location.state?.file;
-        if (!file) {
+        const files = location.state?.files;
+        const singleFile = location.state?.file;
+
+        if (!files && !singleFile) {
             setError("No image file provided.");
             setLoading(false);
             setTimeout(() => navigate("/bill/summarization"), 1500);
@@ -28,39 +30,81 @@ export default function BillAwaiting() {
 
         const controller = new AbortController();
         const formData = new FormData();
-        formData.append("prompt_img", file);
 
-        fetch("http://localhost:8000/bill/bill_reading", {
-            method: "POST",
-            body: formData,
-            signal: controller.signal,
-        })
-            .then(async (res) => {
-                if (!res.ok) {
-                    throw new Error("Failed to process the bill image.");
-                }
-                const data = await res.json();
-                let billData;
-                try {
-                    billData =
-                        typeof data.response === "string"
-                            ? JSON.parse(data.response)
-                            : data.response;
-                } catch {
-                    throw new Error("Failed to parse response.");
-                }
-                setTimeout(() => {
-                    navigate("/bill/result", {
-                        state: { billData, file },
-                    });
-                }, 400);
-            })
-            .catch((err) => {
-                if (err.name !== "AbortError") {
-                    setError(err.message);
-                    setLoading(false);
-                }
+        if (files && files.length > 1) {
+            // Multiple files - use bill_reading_v2
+            files.forEach((file) => {
+                formData.append("prompt_imgs", file);
             });
+
+            fetch("http://localhost:8000/bill/bill_reading_v2", {
+                method: "POST",
+                body: formData,
+                signal: controller.signal,
+            })
+                .then(async (res) => {
+                    if (!res.ok) {
+                        throw new Error("Failed to process the bill images.");
+                    }
+                    const data = await res.json();
+                    let billData;
+                    try {
+                        billData =
+                            typeof data.response === "string"
+                                ? JSON.parse(data.response)
+                                : data.response;
+                    } catch {
+                        throw new Error("Failed to parse response.");
+                    }
+                    setTimeout(() => {
+                        navigate("/bill/result", {
+                            state: { billData, files },
+                        });
+                    }, 400);
+                })
+                .catch((err) => {
+                    if (err.name !== "AbortError") {
+                        setError(err.message);
+                        setLoading(false);
+                    }
+                });
+        } else {
+            // Single file - use original endpoint
+            const fileToProcess = files ? files[0] : singleFile;
+            formData.append("prompt_img", fileToProcess);
+
+            fetch("http://localhost:8000/bill/bill_reading", {
+                method: "POST",
+                body: formData,
+                signal: controller.signal,
+            })
+                .then(async (res) => {
+                    if (!res.ok) {
+                        throw new Error("Failed to process the bill image.");
+                    }
+                    const data = await res.json();
+                    let billData;
+                    try {
+                        billData =
+                            typeof data.response === "string"
+                                ? JSON.parse(data.response)
+                                : data.response;
+                    } catch {
+                        throw new Error("Failed to parse response.");
+                    }
+                    setTimeout(() => {
+                        navigate("/bill/result", {
+                            state: { billData, file: fileToProcess },
+                        });
+                    }, 400);
+                })
+                .catch((err) => {
+                    if (err.name !== "AbortError") {
+                        setError(err.message);
+                        setLoading(false);
+                    }
+                });
+        }
 
         return () => {
             controller.abort();
@@ -73,7 +117,7 @@ export default function BillAwaiting() {
     if (error) {
         progressText = "";
     } else if (loading) {
-        progressText = "Analyzing bill" + dots;
+        progressText = "Analyzing" + dots;
     }
 
     return (

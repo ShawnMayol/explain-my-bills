@@ -9,6 +9,8 @@ import {
     HiTrash,
     HiDotsVertical,
     HiOutlineExclamation,
+    HiChevronLeft,
+    HiChevronRight,
 } from "react-icons/hi";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -18,6 +20,7 @@ import {
     DialogActions,
     Button,
 } from "@mui/material";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function BillDetail() {
     const { billId } = useParams();
@@ -26,6 +29,8 @@ export default function BillDetail() {
 
     const [billData, setBillData] = useState(null);
     const [imgUrl, setImgUrl] = useState(null);
+    const [imgUrls, setImgUrls] = useState([]);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -67,6 +72,13 @@ export default function BillDetail() {
                     const data = billSnap.data();
                     setBillData(data);
                     setImgUrl(data.imageUrl || null);
+
+                    // Handle multiple images
+                    if (data.imageUrls && data.imageUrls.length > 0) {
+                        setImgUrls(data.imageUrls);
+                    } else if (data.imageUrl) {
+                        setImgUrls([data.imageUrl]);
+                    }
                 } else {
                     setError("Bill not found");
                 }
@@ -80,10 +92,51 @@ export default function BillDetail() {
         fetchBill();
     }, [billId, user]);
 
+    const navigateImage = (direction) => {
+        if (imgUrls.length === 0) return;
+
+        if (direction === "prev") {
+            setCurrentImageIndex((prev) =>
+                prev === 0 ? imgUrls.length - 1 : prev - 1
+            );
+        } else {
+            setCurrentImageIndex((prev) =>
+                prev === imgUrls.length - 1 ? 0 : prev + 1
+            );
+        }
+    };
+
     const handleDelete = async () => {
         setIsDeleting(true);
+        toast.loading("Deleting bill...", { id: "deleting" });
+
         try {
-            if (billData.publicId) {
+            // Delete images from Cloudinary
+            if (billData.publicIds && billData.publicIds.length > 0) {
+                // Handle multiple images
+                for (const publicId of billData.publicIds) {
+                    console.log("Deleting image with public ID:", publicId);
+                    const response = await fetch(
+                        "http://127.0.0.1:8000/delete-cloudinary",
+                        {
+                            method: "DELETE",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                publicId: publicId,
+                            }),
+                        }
+                    );
+
+                    if (!response.ok) {
+                        console.warn(
+                            `Failed to delete image with public ID: ${publicId}`
+                        );
+                    }
+                }
+            } else if (billData.publicId) {
+                // Handle single image (legacy support)
                 console.log(
                     "Deleting image with public ID:",
                     billData.publicId
@@ -102,15 +155,25 @@ export default function BillDetail() {
                 );
 
                 if (!response.ok) {
-                    throw new Error("Failed to delete image from Cloudinary");
+                    console.warn(
+                        `Failed to delete image with public ID: ${billData.publicId}`
+                    );
                 }
             }
 
+            // Delete bill document from Firestore
             await deleteDoc(doc(db, "users", user.uid, "bills", billId));
+
+            toast.success("Bill deleted successfully!", { id: "deleting" });
             setShowDeleteDialog(false);
-            navigate("/dashboard");
+            setTimeout(() => {
+                navigate("/dashboard");
+            }, 1000);
         } catch (err) {
             console.error("Error deleting bill:", err);
+            toast.error("Failed to delete bill. Please try again.", {
+                id: "deleting",
+            });
             setError("Failed to delete bill. Please try again.");
             setIsDeleting(false);
             setShowDeleteDialog(false);
@@ -344,10 +407,32 @@ export default function BillDetail() {
                                 <HiOutlineX />
                             </button>
                             <img
-                                src={imgUrl}
-                                alt="bill full"
+                                src={imgUrls[currentImageIndex] || imgUrl}
+                                alt={`bill full ${currentImageIndex + 1}`}
                                 className="max-h-[90vh] max-w-[90vw] rounded-lg shadow-2xl"
                             />
+                            {imgUrls.length > 1 && (
+                                <>
+                                    <button
+                                        onClick={() => navigateImage("prev")}
+                                        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black text-white rounded-full p-2 transition cursor-pointer"
+                                        aria-label="Previous image"
+                                    >
+                                        <HiChevronLeft className="h-6 w-6" />
+                                    </button>
+                                    <button
+                                        onClick={() => navigateImage("next")}
+                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black text-white rounded-full p-2 transition cursor-pointer"
+                                        aria-label="Next image"
+                                    >
+                                        <HiChevronRight className="h-6 w-6" />
+                                    </button>
+                                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-black/50 text-white rounded text-sm">
+                                        {currentImageIndex + 1} /{" "}
+                                        {imgUrls.length}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
@@ -394,16 +479,48 @@ export default function BillDetail() {
 
                         <div className="flex flex-col md:flex-row gap-12">
                             <div className="flex-shrink-0 flex flex-col items-center">
-                                <div className="w-full max-w-[340px] h-[400px] bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
-                                    {imgUrl ? (
-                                        <img
-                                            src={imgUrl}
-                                            alt="bill"
-                                            className="object-contain h-full w-full rounded cursor-zoom-in"
-                                            onClick={() =>
-                                                setShowImageModal(true)
-                                            }
-                                        />
+                                <div className="relative w-[400px] h-[400px] bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
+                                    {imgUrls.length > 0 ? (
+                                        <>
+                                            <img
+                                                src={imgUrls[currentImageIndex]}
+                                                alt={`bill ${
+                                                    currentImageIndex + 1
+                                                }`}
+                                                className="object-contain h-full w-full rounded cursor-zoom-in"
+                                                onClick={() =>
+                                                    setShowImageModal(true)
+                                                }
+                                            />
+                                            {imgUrls.length > 1 && (
+                                                <>
+                                                    <button
+                                                        onClick={() =>
+                                                            navigateImage(
+                                                                "prev"
+                                                            )
+                                                        }
+                                                        className="absolute left-2 top-1/2 transform -translate-y-1/2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 cursor-pointer"
+                                                    >
+                                                        <HiChevronLeft className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() =>
+                                                            navigateImage(
+                                                                "next"
+                                                            )
+                                                        }
+                                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 cursor-pointer"
+                                                    >
+                                                        <HiChevronRight className="w-5 h-5" />
+                                                    </button>
+                                                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-black/50 text-white rounded text-sm">
+                                                        {currentImageIndex + 1}{" "}
+                                                        / {imgUrls.length}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </>
                                     ) : (
                                         <span className="text-gray-400">
                                             No Image
@@ -586,6 +703,18 @@ export default function BillDetail() {
                         </DialogActions>
                     </Dialog>
                 )}
+
+                <Toaster
+                    position="top-right"
+                    toastOptions={{
+                        duration: 3000,
+                        style: {
+                            background: "#18181b",
+                            color: "#fff",
+                            border: "1px solid #374151",
+                        },
+                    }}
+                />
             </div>
         </>
     );

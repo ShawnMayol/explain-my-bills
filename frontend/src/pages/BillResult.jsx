@@ -8,7 +8,21 @@ import Sidebar from "../components/Sidebar";
 import { db } from "../../firebase/firebaseConfig";
 import { getAuth } from "firebase/auth";
 import { collection, doc, setDoc } from "firebase/firestore";
-import { HiOutlineMenu, HiOutlineX } from "react-icons/hi";
+import {
+    HiOutlineMenu,
+    HiOutlineX,
+    HiChevronLeft,
+    HiChevronRight,
+} from "react-icons/hi";
+import toast, { Toaster } from "react-hot-toast";
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    DialogContentText,
+} from "@mui/material";
 
 function usePrompt(message, shouldBlockRef) {
     const { navigator } = useContext(UNSAFE_NavigationContext);
@@ -33,13 +47,16 @@ export default function BillResult() {
     const navigate = useNavigate();
     const billData = location.state?.billData;
     const file = location.state?.file;
+    const files = location.state?.files;
 
-    const [imgUrl, setImgUrl] = useState(null);
+    const [imgUrls, setImgUrls] = useState([]);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [isBillValid, setIsBillValid] = useState(true);
     const [showImageModal, setShowImageModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     const shouldBlockRef = useRef(true);
 
@@ -80,17 +97,26 @@ export default function BillResult() {
     usePrompt(promptMsg, shouldBlockRef);
 
     useEffect(() => {
-        if (!billData || !file) {
+        if (!billData || (!file && !files)) {
             shouldBlockRef.current = false;
             navigate("/bill/summarization", { replace: true });
             return;
         }
-        const url = URL.createObjectURL(file);
-        setImgUrl(url);
-        return () => {
-            if (url) URL.revokeObjectURL(url);
-        };
-    }, [billData, file, navigate]);
+
+        if (files && files.length > 0) {
+            const urls = files.map((f) => URL.createObjectURL(f));
+            setImgUrls(urls);
+            return () => {
+                urls.forEach((url) => URL.revokeObjectURL(url));
+            };
+        } else if (file) {
+            const url = URL.createObjectURL(file);
+            setImgUrls([url]);
+            return () => {
+                URL.revokeObjectURL(url);
+            };
+        }
+    }, [billData, file, files, navigate]);
 
     useEffect(() => {
         const onScroll = () => {
@@ -100,59 +126,127 @@ export default function BillResult() {
         return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
+    const navigateImage = (direction) => {
+        if (imgUrls.length <= 1) return;
+
+        if (direction === "prev") {
+            setCurrentImageIndex((prev) =>
+                prev === 0 ? imgUrls.length - 1 : prev - 1
+            );
+        } else {
+            setCurrentImageIndex((prev) =>
+                prev === imgUrls.length - 1 ? 0 : prev + 1
+            );
+        }
+    };
+
     const handleSave = async () => {
         const auth = getAuth();
         const user = auth.currentUser;
 
         if (!user) {
-            alert("You must be logged in to save a bill.");
+            toast.error("You must be logged in to save a bill.");
             return;
         }
 
         setIsSaving(true);
+
         try {
             const userId = user.uid;
-            const filename = file.name.split(".")[0];
-
-            const sigRes = await fetch(
-                "http://127.0.0.1:8000/upload-signature",
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId, filename }),
-                }
-            );
-
-            const {
-                cloudName,
-                apiKey,
-                timestamp,
-                signature,
-                folder,
-                publicId,
-            } = await sigRes.json();
-
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("api_key", apiKey);
-            formData.append("timestamp", timestamp);
-            formData.append("signature", signature);
-            formData.append("folder", folder);
-            formData.append("public_id", publicId);
-
-            // Upload image to Cloudinary
-            const cloudinaryRes = await fetch(
-                `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-                {
-                    method: "POST",
-                    body: formData,
-                }
-            );
-
-            const cloudinaryData = await cloudinaryRes.json();
-
-            // Save data to Firestore
             const imageId = `bill-${Date.now()}`;
+            let imageUrls = [];
+            let publicIds = [];
+
+            if (files && files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const currentFile = files[i];
+                    const filename = `${currentFile.name.split(".")[0]}_page_${
+                        i + 1
+                    }`;
+
+                    const sigRes = await fetch(
+                        "http://127.0.0.1:8000/upload-signature",
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ userId, filename }),
+                        }
+                    );
+
+                    const {
+                        cloudName,
+                        apiKey,
+                        timestamp,
+                        signature,
+                        folder,
+                        publicId,
+                    } = await sigRes.json();
+
+                    const formData = new FormData();
+                    formData.append("file", currentFile);
+                    formData.append("api_key", apiKey);
+                    formData.append("timestamp", timestamp);
+                    formData.append("signature", signature);
+                    formData.append("folder", folder);
+                    formData.append("public_id", publicId);
+
+                    const cloudinaryRes = await fetch(
+                        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+                        {
+                            method: "POST",
+                            body: formData,
+                        }
+                    );
+
+                    const cloudinaryData = await cloudinaryRes.json();
+                    imageUrls.push(cloudinaryData.secure_url);
+                    publicIds.push(cloudinaryData.public_id);
+                }
+            } else if (file) {
+                const filename = file.name.split(".")[0];
+
+                const sigRes = await fetch(
+                    "http://127.0.0.1:8000/upload-signature",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ userId, filename }),
+                    }
+                );
+
+                const {
+                    cloudName,
+                    apiKey,
+                    timestamp,
+                    signature,
+                    folder,
+                    publicId,
+                } = await sigRes.json();
+
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("api_key", apiKey);
+                formData.append("timestamp", timestamp);
+                formData.append("signature", signature);
+                formData.append("folder", folder);
+                formData.append("public_id", publicId);
+
+                const cloudinaryRes = await fetch(
+                    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+                    {
+                        method: "POST",
+                        body: formData,
+                    }
+                );
+
+                const cloudinaryData = await cloudinaryRes.json();
+                imageUrls.push(cloudinaryData.secure_url);
+                publicIds.push(cloudinaryData.public_id);
+            }
+
+            const isMultiPage = Boolean(files && files.length > 1);
+            const pageCount = imageUrls.length;
+
             const billDocRef = doc(
                 collection(db, "users", user.uid, "bills"),
                 imageId
@@ -161,28 +255,44 @@ export default function BillResult() {
                 ...billData,
                 imageId: imageId,
                 createdAt: new Date().toISOString(),
-                imageUrl: cloudinaryData.secure_url,
-                publicId: cloudinaryData.public_id,
+                imageUrls: imageUrls,
+                publicIds: publicIds,
+                imageUrl: imageUrls[0],
+                publicId: publicIds[0],
+                isMultiPage: isMultiPage,
+                pageCount: pageCount,
             });
 
+            toast.success("Bill saved successfully!", { id: "saving" });
             shouldBlockRef.current = false;
-            window.location.assign("/dashboard");
+            setTimeout(() => {
+                window.location.assign("/dashboard");
+            }, 1000);
         } catch (error) {
             console.error("Failed to save bill:", error);
-            alert("Failed to save bill. Please try again.");
+            toast.error("Failed to save bill. Please try again.", {
+                id: "saving",
+            });
         } finally {
             setIsSaving(false);
         }
     };
 
     const handleDelete = () => {
-        if (window.confirm("Are you sure?")) {
-            shouldBlockRef.current = false;
-            window.location.assign("/dashboard");
-        }
+        setShowDeleteDialog(true);
     };
 
-    if (!billData || !file) return null;
+    const confirmDelete = () => {
+        shouldBlockRef.current = false;
+        setShowDeleteDialog(false);
+        window.location.assign("/dashboard");
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteDialog(false);
+    };
+
+    if (!billData || (!file && !files)) return null;
 
     const highlightStr = Array.isArray(billData.highlights)
         ? billData.highlights
@@ -232,10 +342,31 @@ export default function BillResult() {
                             <HiOutlineX />
                         </button>
                         <img
-                            src={imgUrl}
-                            alt="bill full"
+                            src={imgUrls[currentImageIndex]}
+                            alt={`bill ${currentImageIndex + 1}`}
                             className="max-h-[90vh] max-w-[90vw] rounded-lg shadow-2xl"
                         />
+                        {imgUrls.length > 1 && (
+                            <>
+                                <button
+                                    onClick={() => navigateImage("prev")}
+                                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black text-white rounded-full p-2 transition cursor-pointer"
+                                    aria-label="Previous image"
+                                >
+                                    <HiChevronLeft className="w-6 h-6" />
+                                </button>
+                                <button
+                                    onClick={() => navigateImage("next")}
+                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black text-white rounded-full p-2 transition cursor-pointer"
+                                    aria-label="Next image"
+                                >
+                                    <HiChevronRight className="w-6 h-6" />
+                                </button>
+                                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-black/50 text-white rounded text-sm">
+                                    {currentImageIndex + 1} / {imgUrls.length}
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -249,14 +380,44 @@ export default function BillResult() {
                     </span>
                     <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
                         <div className="flex-shrink-0 w-full lg:w-auto flex flex-col items-center">
-                            <div className="w-full max-w-[340px] h-[400px] bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
-                                {imgUrl ? (
-                                    <img
-                                        src={imgUrl}
-                                        alt="bill"
-                                        className="object-contain h-full w-full rounded cursor-zoom-in"
-                                        onClick={() => setShowImageModal(true)}
-                                    />
+                            <div className="relative w-[400px] h-[400px] bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
+                                {imgUrls.length > 0 ? (
+                                    <>
+                                        <img
+                                            src={imgUrls[currentImageIndex]}
+                                            alt={`bill ${
+                                                currentImageIndex + 1
+                                            }`}
+                                            className="object-contain h-full w-full rounded cursor-zoom-in"
+                                            onClick={() =>
+                                                setShowImageModal(true)
+                                            }
+                                        />
+                                        {imgUrls.length > 1 && (
+                                            <>
+                                                <button
+                                                    onClick={() =>
+                                                        navigateImage("prev")
+                                                    }
+                                                    className="absolute left-2 top-1/2 transform -translate-y-1/2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 cursor-pointer"
+                                                >
+                                                    <HiChevronLeft className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() =>
+                                                        navigateImage("next")
+                                                    }
+                                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 cursor-pointer"
+                                                >
+                                                    <HiChevronRight className="w-5 h-5" />
+                                                </button>
+                                                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-black/50 text-white rounded text-sm">
+                                                    {currentImageIndex + 1} /{" "}
+                                                    {imgUrls.length}
+                                                </div>
+                                            </>
+                                        )}
+                                    </>
                                 ) : (
                                     <span className="text-gray-400">
                                         No Image
@@ -379,6 +540,46 @@ export default function BillResult() {
                     </div>
                 </div>
             </main>
+
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    duration: 3000,
+                    style: {
+                        background: "#18181b",
+                        color: "#fff",
+                        border: "1px solid #374151",
+                    },
+                }}
+            />
+
+            <Dialog
+                open={showDeleteDialog}
+                onClose={cancelDelete}
+                PaperProps={{
+                    sx: {
+                        backgroundColor: "#18181b",
+                        color: "white",
+                        border: "1px solid #374151",
+                    },
+                }}
+            >
+                <DialogTitle>Confirm Delete</DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ color: "#9ca3af" }}>
+                        Are you sure you want to discard this bill? This action
+                        cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={cancelDelete} sx={{ color: "#9ca3af" }}>
+                        Cancel
+                    </Button>
+                    <Button onClick={confirmDelete} sx={{ color: "#ef4444" }}>
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 }
