@@ -2,7 +2,8 @@ import { useState, useCallback } from "react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
 
-const API_URL = "http://localhost:8000";
+// Changed to deployed API via Render
+const API_URL = "https://explain-my-bills.onrender.com";
 
 const generateDataHash = (bills) =>
   JSON.stringify(bills.map((b) => [b.tooltipLabel, b.value]));
