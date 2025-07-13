@@ -380,7 +380,7 @@ export default function BillResult() {
                     </span>
                     <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
                         <div className="flex-shrink-0 w-full lg:w-auto flex flex-col items-center">
-                            <div className="relative w-[400px] h-[400px] bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
+                            <div className="relative w-full max-w-[300px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-[300px] xl:max-w-[400px] aspect-square bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
                                 {imgUrls.length > 0 ? (
                                     <>
                                         <img
@@ -425,8 +425,8 @@ export default function BillResult() {
                                 )}
                             </div>
                         </div>
-                        <section className="flex-1 flex flex-col space-y-6 w-full">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4">
+                        <section className="flex-1 flex flex-col space-y-6 w-full min-w-0">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-8 lg:gap-x-12 gap-y-4">
                                 <InfoItem
                                     label="Bill Type"
                                     value={billData.billType}
