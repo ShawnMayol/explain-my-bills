@@ -640,10 +640,28 @@ export default function BillSummarization() {
                             </Modal>
 
                             {selectedFiles.length > 0 && (
-                                <Box sx={{ mb: 3 }}>
+                                <Box
+                                    sx={{
+                                        mb: 3,
+                                        width: "100%",
+                                        maxWidth: {
+                                            xs: "100%",
+                                            sm: 480,
+                                            md: 600,
+                                        },
+                                        mx: "auto",
+                                    }}
+                                >
                                     <Typography
                                         variant="h6"
-                                        sx={{ color: "#d1d5db", mb: 2 }}
+                                        sx={{
+                                            color: "#d1d5db",
+                                            mb: 2,
+                                            fontSize: {
+                                                xs: "1rem",
+                                                sm: "1.25rem",
+                                            },
+                                        }}
                                     >
                                         Uploaded Pages ({selectedFiles.length}/
                                         {MAX_FILES})
@@ -667,27 +685,83 @@ export default function BillSummarization() {
                                             <AccordionSummary
                                                 expandIcon={
                                                     <ExpandMoreIcon
-                                                        sx={{ color: "white" }}
+                                                        sx={{
+                                                            color: "white",
+                                                            fontSize: {
+                                                                xs: "1.2rem",
+                                                                sm: "1.5rem",
+                                                            },
+                                                        }}
                                                     />
                                                 }
-                                                sx={{ minHeight: 56 }}
+                                                sx={{
+                                                    minHeight: {
+                                                        xs: 48,
+                                                        sm: 56,
+                                                    },
+                                                    px: { xs: 1, sm: 2 },
+                                                }}
                                             >
                                                 <Avatar
                                                     sx={{
-                                                        mr: 2,
+                                                        mr: { xs: 1, sm: 2 },
                                                         bgcolor: "#fbbf24",
+                                                        width: {
+                                                            xs: 32,
+                                                            sm: 40,
+                                                        },
+                                                        height: {
+                                                            xs: 32,
+                                                            sm: 40,
+                                                        },
+                                                        display: 
+                                                            "flex",
+                                                        
                                                     }}
                                                 >
-                                                    <ImageIcon />
+                                                    <ImageIcon
+                                                        sx={{
+                                                            fontSize: {
+                                                                sm: "1.2rem",
+                                                            },
+                                                        }}
+                                                    />
                                                 </Avatar>
-                                                <Box sx={{ flex: 1 }}>
-                                                    <Typography variant="subtitle1">
+                                                <Box
+                                                    sx={{
+                                                        flex: 1,
+                                                        minWidth: 0,
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        variant="subtitle1"
+                                                        sx={{
+                                                            fontSize: {
+                                                                xs: "0.875rem",
+                                                                sm: "1rem",
+                                                            },
+                                                            fontWeight: 600,
+                                                        }}
+                                                    >
                                                         Page {index + 1}
                                                     </Typography>
                                                     <Typography
                                                         variant="body2"
                                                         sx={{
                                                             color: "#9ca3af",
+                                                            fontSize: {
+                                                                xs: "0.75rem",
+                                                                sm: "0.875rem",
+                                                            },
+                                                            overflow: "hidden",
+                                                            textOverflow:
+                                                                "ellipsis",
+                                                            whiteSpace:
+                                                                "nowrap",
+                                                            maxWidth: {
+                                                                xs: "150px",
+                                                                sm: "300px",
+                                                            },
                                                         }}
                                                     >
                                                         {fileObj.file.name}
@@ -720,10 +794,18 @@ export default function BillSummarization() {
                                                     }
                                                     size="small"
                                                     sx={{
-                                                        mr: 1,
+                                                        mr: { xs: 0.5, sm: 1 },
                                                         bgcolor: "#6b7280",
                                                         color: "white",
                                                         mt: 1.5,
+                                                        fontSize: {
+                                                            xs: "0.65rem",
+                                                            sm: "0.75rem",
+                                                        },
+                                                        height: {
+                                                            xs: 20,
+                                                            sm: 24,
+                                                        },
                                                     }}
                                                 />
                                                 <IconButton
@@ -732,9 +814,19 @@ export default function BillSummarization() {
                                                         removeFile(index);
                                                     }}
                                                     size="small"
-                                                    sx={{ color: "#ef4444" }}
+                                                    sx={{
+                                                        color: "#ef4444",
+                                                        p: { xs: 0.5, sm: 1 },
+                                                    }}
                                                 >
-                                                    <DeleteIcon className="hover:bg-gray-600 rounded-full" />
+                                                    <DeleteIcon
+                                                        sx={{
+                                                            fontSize: {
+                                                                xs: "1rem",
+                                                                sm: "1.25rem",
+                                                            },
+                                                        }}
+                                                    />
                                                 </IconButton>
                                             </AccordionSummary>
                                             <AccordionDetails>
@@ -750,7 +842,10 @@ export default function BillSummarization() {
                                                             position:
                                                                 "relative",
                                                             width: "100%",
-                                                            height: 300,
+                                                            height: {
+                                                                xs: 250,
+                                                                sm: 300,
+                                                            },
                                                             border: "2px solid #6b7280",
                                                             borderRadius: 2,
                                                             overflow: "hidden",
@@ -774,7 +869,10 @@ export default function BillSummarization() {
                                                     </Box>
 
                                                     <Stack
-                                                        direction="row"
+                                                        direction={{
+                                                            xs: "column",
+                                                            sm: "row",
+                                                        }}
                                                         spacing={2}
                                                         justifyContent="center"
                                                     >
@@ -789,10 +887,15 @@ export default function BillSummarization() {
                                                                         index
                                                                     )
                                                                 }
+                                                                size="small"
                                                                 sx={{
                                                                     borderColor:
                                                                         "#fbbf24",
                                                                     color: "#fbbf24",
+                                                                    fontSize: {
+                                                                        xs: "0.75rem",
+                                                                        sm: "0.875rem",
+                                                                    },
                                                                     "&:hover": {
                                                                         borderColor:
                                                                             "#f59e0b",
@@ -816,10 +919,15 @@ export default function BillSummarization() {
                                                                     index
                                                                 )
                                                             }
+                                                            size="small"
                                                             sx={{
                                                                 borderColor:
                                                                     "white",
                                                                 color: "white",
+                                                                fontSize: {
+                                                                    xs: "0.75rem",
+                                                                    sm: "0.875rem",
+                                                                },
                                                                 "&:hover": {
                                                                     borderColor:
                                                                         "#d1d5db",
