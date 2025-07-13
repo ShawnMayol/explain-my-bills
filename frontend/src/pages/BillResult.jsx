@@ -24,7 +24,7 @@ import {
   DialogContentText,
 } from "@mui/material";
 
-const API_URL = "explain-my-bills.up.railway.app";
+const API_URL = import.meta.env.BACKEND_API_URL;
 
 function usePrompt(message, shouldBlockRef) {
   const { navigator } = useContext(UNSAFE_NavigationContext);

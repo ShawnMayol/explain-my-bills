@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LinearProgress from "@mui/material/LinearProgress";
 
-const API_URL = "explain-my-bills.up.railway.app";
+const API_URL = import.meta.env.BACKEND_API_URL;
 
 export default function BillAwaiting() {
     const location = useLocation();
