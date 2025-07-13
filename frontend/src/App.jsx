@@ -17,7 +17,6 @@ import AnalyticsPage from "./pages/AnalyticsPage.jsx";
 import NotificationsPage from "./pages/NotificationsPage.jsx";
 import BillsPage from "./pages/BillsPage.jsx";
 import BillDetail from "./pages/BillDetail.jsx";
-import Test from "./pages/test.jsx";
 
 function App() {
     return (
@@ -122,7 +121,6 @@ function App() {
                     }
                 />
                 <Route path="*" element={<NotFound />} />
-                <Route path="/test" element={<Test />} />
             </Routes>
         </>
     );
