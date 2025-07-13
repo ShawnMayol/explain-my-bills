@@ -1,20 +1,51 @@
+// TODO: fix camera switching will upload new image instead of replacing
+// NOTE: Explanation doesn't explain why the upload is marked invalid
+// NOTE: Invalid bills are still able to be uploaded if there is one valid bill
+
 import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import { ThreeDot } from "react-loading-indicators";
+import { HiOutlineMenu } from "react-icons/hi";
 import {
-    HiOutlineMenu,
-    HiCamera,
-    HiOutlineX,
-    HiUpload,
-    HiSwitchHorizontal,
-    HiPhotograph,
-} from "react-icons/hi";
+    Box,
+    Typography,
+    Button,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    List,
+    ListItem,
+    ListItemText,
+    ListItemSecondaryAction,
+    IconButton,
+    Chip,
+    Alert,
+    Fab,
+    Avatar,
+    Divider,
+    Paper,
+    Stack,
+    Modal,
+    Backdrop,
+} from "@mui/material";
+import {
+    ExpandMore as ExpandMoreIcon,
+    Delete as DeleteIcon,
+    PhotoCamera as PhotoCameraIcon,
+    Upload as UploadIcon,
+    Add as AddIcon,
+    Image as ImageIcon,
+    FlipCameraAndroid as FlipCameraIcon,
+    Close as CloseIcon,
+} from "@mui/icons-material";
 
 const MAX_FILE_SIZE_MB = 5;
+const MAX_FILES = 8;
 
 export default function BillSummarization() {
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [previewUrl, setPreviewUrl] = useState("");
+    const [selectedFiles, setSelectedFiles] = useState([]);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [error, setError] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
@@ -22,6 +53,9 @@ export default function BillSummarization() {
     const [showCamera, setShowCamera] = useState(false);
     const [facingMode, setFacingMode] = useState("environment");
     const [flash, setFlash] = useState(false);
+    const [expandedPanels, setExpandedPanels] = useState({});
+    const [replacingIndex, setReplacingIndex] = useState(null);
+    const [cameraLoading, setCameraLoading] = useState(false);
 
     const fileInputRef = useRef();
     const videoRef = useRef();
@@ -40,31 +74,154 @@ export default function BillSummarization() {
 
     const handleFileChange = (e) => {
         setError("");
-        const file = e.target.files[0];
-        if (!file) return;
-        if (!file.type.startsWith("image/")) {
-            setError("Please upload a valid image file (JPG, PNG, etc).");
+        const files = Array.from(e.target.files);
+
+        if (replacingIndex !== null) {
+            if (files.length > 0) {
+                const file = files[0];
+
+                if (!file.type.startsWith("image/")) {
+                    setError("Please select only image files");
+                    return;
+                }
+                if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                    setError(
+                        `File size must be less than ${MAX_FILE_SIZE_MB}MB`
+                    );
+                    return;
+                }
+
+                const newFile = {
+                    file,
+                    previewUrl: URL.createObjectURL(file),
+                    id: Date.now() + Math.random(),
+                };
+
+                setSelectedFiles((prev) => {
+                    const newFiles = [...prev];
+                    if (newFiles[replacingIndex]?.previewUrl) {
+                        URL.revokeObjectURL(
+                            newFiles[replacingIndex].previewUrl
+                        );
+                    }
+                    newFiles[replacingIndex] = newFile;
+                    return newFiles;
+                });
+
+                setReplacingIndex(null);
+            }
             return;
         }
-        if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-            setError(`Image must be less than ${MAX_FILE_SIZE_MB}MB.`);
+
+        if (selectedFiles.length + files.length > MAX_FILES) {
+            setError(`Maximum ${MAX_FILES} files allowed`);
             return;
         }
-        setSelectedFile(file);
-        setPreviewUrl(URL.createObjectURL(file));
+
+        for (const file of files) {
+            if (!file.type.startsWith("image/")) {
+                setError("Please select only image files");
+                return;
+            }
+            if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                setError(`File size must be less than ${MAX_FILE_SIZE_MB}MB`);
+                return;
+            }
+        }
+
+        const newFiles = files.map((file) => ({
+            file,
+            previewUrl: URL.createObjectURL(file),
+            id: Date.now() + Math.random(),
+        }));
+
+        setSelectedFiles((prev) => [...prev, ...newFiles]);
+        setCurrentImageIndex(selectedFiles.length);
+
+        if (newFiles.length > 0) {
+            const latestIndex = selectedFiles.length + newFiles.length - 1;
+            setExpandedPanels((prev) => ({
+                ...prev,
+                [latestIndex]: true,
+            }));
+        }
+    };
+
+    const removeFile = (index) => {
+        setSelectedFiles((prev) => {
+            const newFiles = prev.filter((_, i) => i !== index);
+            if (currentImageIndex >= newFiles.length && newFiles.length > 0) {
+                setCurrentImageIndex(newFiles.length - 1);
+            } else if (newFiles.length === 0) {
+                setCurrentImageIndex(0);
+            }
+            return newFiles;
+        });
+
+        setExpandedPanels((prev) => {
+            const newPanels = { ...prev };
+            delete newPanels[index];
+
+            const adjustedPanels = {};
+            Object.keys(newPanels).forEach((key) => {
+                const idx = parseInt(key);
+                if (idx > index) {
+                    adjustedPanels[idx - 1] = newPanels[key];
+                } else {
+                    adjustedPanels[key] = newPanels[key];
+                }
+            });
+
+            return adjustedPanels;
+        });
+    };
+
+    const addNextPage = () => {
+        if (selectedFiles.length >= MAX_FILES) {
+            setError(`Maximum ${MAX_FILES} files allowed`);
+            return;
+        }
+        setReplacingIndex(null);
+        fileInputRef.current.click();
+    };
+
+    const handlePanelChange = (panel) => (event, isExpanded) => {
+        setExpandedPanels((prev) => ({
+            ...prev,
+            [panel]: isExpanded,
+        }));
+    };
+
+    const handleCameraForItem = (index) => {
+        setReplacingIndex(index);
+        setCurrentImageIndex(index);
+        if (showCamera) {
+            stopCamera();
+        } else {
+            startCamera();
+        }
+    };
+
+    const handleUploadForItem = (index) => {
+        setReplacingIndex(index);
+        setCurrentImageIndex(index);
+        fileInputRef.current.click();
     };
 
     const startCamera = async () => {
         setError("");
+        setCameraLoading(true);
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode },
             });
             streamRef.current = stream;
             setShowCamera(true);
+            setCameraLoading(false);
         } catch (err) {
             console.error(err);
             setError("Unable to access camera");
+            setCameraLoading(false);
         }
     };
 
@@ -74,6 +231,8 @@ export default function BillSummarization() {
             streamRef.current = null;
         }
         setShowCamera(false);
+        setCameraLoading(false);
+        setReplacingIndex(null);
     };
 
     const toggleCamera = () => {
@@ -87,6 +246,7 @@ export default function BillSummarization() {
     const flipCamera = () => {
         const newMode = facingMode === "environment" ? "user" : "environment";
         setFacingMode(newMode);
+        setCameraLoading(true);
         stopCamera();
         setTimeout(() => {
             startCamera();
@@ -104,33 +264,100 @@ export default function BillSummarization() {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext("2d").drawImage(video, 0, 0);
-        canvas.toBlob((blob) => {
-            const file = new File([blob], "captured.jpg", {
-                type: "image/jpeg",
-            });
-            setSelectedFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
-            stopCamera();
-        }, "image/jpeg");
+
+        canvas.toBlob(
+            (blob) => {
+                const file = new File(
+                    [blob],
+                    `camera-capture-${Date.now()}.jpg`,
+                    {
+                        type: "image/jpeg",
+                    }
+                );
+
+                const newFile = {
+                    file,
+                    previewUrl: URL.createObjectURL(file),
+                    id: Date.now() + Math.random(),
+                };
+
+                if (replacingIndex !== null) {
+                    setSelectedFiles((prev) => {
+                        const newFiles = [...prev];
+                        if (newFiles[replacingIndex]?.previewUrl) {
+                            URL.revokeObjectURL(
+                                newFiles[replacingIndex].previewUrl
+                            );
+                        }
+                        newFiles[replacingIndex] = newFile;
+                        return newFiles;
+                    });
+                    setReplacingIndex(null);
+                } else {
+                    if (selectedFiles.length >= MAX_FILES) {
+                        setError(`Maximum ${MAX_FILES} files allowed`);
+                        return;
+                    }
+
+                    setSelectedFiles((prev) => [...prev, newFile]);
+                    const newIndex = selectedFiles.length;
+                    setCurrentImageIndex(newIndex);
+
+                    setExpandedPanels((prev) => ({
+                        ...prev,
+                        [newIndex]: true,
+                    }));
+                }
+
+                stopCamera();
+            },
+            "image/jpeg",
+            0.9
+        );
     };
 
     useEffect(() => {
-        if (showCamera && videoRef.current && streamRef.current) {
-            videoRef.current.srcObject = streamRef.current;
-        }
-    }, [showCamera]);
+        const setVideoStream = async () => {
+            if (
+                showCamera &&
+                videoRef.current &&
+                streamRef.current &&
+                !cameraLoading
+            ) {
+                try {
+                    videoRef.current.srcObject = streamRef.current;
+                    await videoRef.current.play();
+                } catch (error) {
+                    console.error("Error setting video stream:", error);
+                }
+            }
+        };
+
+        setVideoStream();
+    }, [showCamera, cameraLoading]);
 
     const handleUpload = () => {
-        if (!selectedFile) {
-            setError("Please select an image.");
+        if (selectedFiles.length === 0) {
+            setError("Please select at least one file");
             return;
         }
 
-        if (showCamera) {
-            stopCamera(); // fail-safe
-        }
+        const files = selectedFiles.map((sf) => sf.file);
+        navigate("/bill/awaiting", { state: { files } });
+    };
 
-        navigate("/bill/awaiting", { state: { file: selectedFile } });
+    const navigateImage = (direction) => {
+        if (selectedFiles.length === 0) return;
+
+        if (direction === "prev") {
+            setCurrentImageIndex((prev) =>
+                prev === 0 ? selectedFiles.length - 1 : prev - 1
+            );
+        } else {
+            setCurrentImageIndex((prev) =>
+                prev === selectedFiles.length - 1 ? 0 : prev + 1
+            );
+        }
     };
 
     return (
@@ -153,147 +380,712 @@ export default function BillSummarization() {
                 </button>
             </div>
 
-            <main className="md:ml-[20%] flex-1 flex flex-col justify-center min-h-screen px-4 md:px-10 mt-16 md:mt-0">
-                <div className="w-full max-w-6xl mx-auto">
-                    <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-yellow-300">
+            <main className="md:ml-[20%] flex-1 flex flex-col min-h-screen px-4 md:px-10 mt-16 md:mt-0">
+                <Box sx={{ maxWidth: 1200, mx: "auto", width: "100%", py: 4 }}>
+                    <Typography
+                        variant="h4"
+                        component="h1"
+                        sx={{
+                            color: "#fbbf24",
+                            fontWeight: "bold",
+                            mb: 1,
+                        }}
+                    >
                         Bill Summarization
-                    </h1>
-                    <hr className="mb-8 border-t-2 border-gray-200/50" />
+                    </Typography>
+                    <Divider
+                        sx={{ mb: 4, borderColor: "rgba(255,255,255,0.2)" }}
+                    />
 
-                    <div className="flex flex-col md:flex-row gap-8 md:gap-16">
-                        <section className="flex-1">
-                            <p className="mb-4 text-gray-300 font-semibold text-lg">
-                                Upload Bill
-                            </p>
-                            <ul className="mb-8 text-base text-gray-400 list-disc list-inside">
-                                <li>Only clear, readable images (JPG, PNG).</li>
-                                <li>Max file size: 5MB.</li>
-                                <li>Keep the bill flat & unfolded.</li>
-                            </ul>
-                            {error && (
-                                <div className="text-red-500 mb-2">{error}</div>
-                            )}
-                        </section>
-
-                        <section className="flex-1 flex flex-col items-center">
-                            <div
-                                className="relative w-full max-w-[480px] h-[300px] sm:h-[370px] bg-zinc-900 border-2 border-white rounded-2xl flex items-center justify-center text-gray-400 text-xl font-bold cursor-pointer mb-6"
-                                onClick={() =>
-                                    !showCamera && fileInputRef.current.click()
-                                }
-                                role="button"
-                                tabIndex={0}
-                                aria-label="Upload bill image"
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: { xs: "column", md: "row" },
+                            gap: 4,
+                        }}
+                    >
+                        <Box sx={{ flex: 1 }}>
+                            <Typography
+                                variant="h6"
+                                sx={{ color: "#d1d5db", mb: 2 }}
                             >
-                                {showCamera ? (
-                                    <>
-                                        <video
-                                            ref={videoRef}
-                                            autoPlay
-                                            playsInline
-                                            muted
-                                            className="w-full h-full object-cover rounded-xl"
-                                        />
-                                        <div
-                                            className="absolute inset-0 bg-white opacity-0 pointer-events-none transition-opacity duration-150"
-                                            style={{ opacity: flash ? 1 : 0 }}
-                                        />
-                                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                                            <button
-                                                onClick={capturePhoto}
-                                                className="p-3 bg-yellow-300 text-black rounded-full hover:bg-yellow-400 text-lg flex items-center justify-center cursor-pointer"
-                                                aria-label="Capture"
-                                            >
-                                                <HiCamera />
-                                            </button>
-                                        </div>
-
-                                        <div className="absolute bottom-2 right-2">
-                                            <button
-                                                onClick={flipCamera}
-                                                className="
-                                                        p-3 
-                                                        bg-white/25 
-                                                        backdrop-blur-md 
-                                                        text-white 
-                                                        rounded-full 
-                                                        hover:bg-gray-400/60 
-                                                        text-lg 
-                                                        flex 
-                                                        items-center 
-                                                        justify-center
-                                                        shadow-md
-                                                        cursor-pointer
-                                                    "
-                                                aria-label="Flip Camera"
-                                            >
-                                                <HiSwitchHorizontal />
-                                            </button>
-                                        </div>
-                                    </>
-                                ) : previewUrl ? (
-                                    <img
-                                        src={previewUrl}
-                                        alt="Preview"
-                                        className="object-contain h-full max-w-full rounded"
+                                Upload Bill
+                            </Typography>
+                            <List sx={{ color: "#9ca3af", mb: 3 }}>
+                                <ListItem sx={{ py: 0.5 }}>
+                                    <ListItemText
+                                        primary={`Max file size: ${MAX_FILE_SIZE_MB}MB per file.`}
                                     />
-                                ) : (
-                                    <span>Click here to upload your bill</span>
-                                )}
-                            </div>
+                                </ListItem>
+                                <ListItem sx={{ py: 0.5 }}>
+                                    <ListItemText primary="Keep the bill flat & unfolded." />
+                                </ListItem>
+                                <ListItem sx={{ py: 0.5 }}>
+                                    <ListItemText primary="Only clear, readable images (JPG, PNG)." />
+                                </ListItem>
+                            </List>
+                            <Typography
+                                variant="h6"
+                                sx={{ color: "#d1d5db", mb: 2 }}
+                            >
+                                Multiple Pages
+                            </Typography>
+                            <List sx={{ color: "#9ca3af", mb: 3 }}>
+                                <ListItem sx={{ py: 0.5 }}>
+                                    <ListItemText
+                                        primary={`Upload multiple pages of the same bill (max ${MAX_FILES} files).`}
+                                    />
+                                </ListItem>
+                                <ListItem sx={{ py: 0.5 }}>
+                                    <ListItemText primary="Ensure all pages are from the same bill." />
+                                </ListItem>
+                            </List>
+
+                            {error && (
+                                <Alert severity="error" sx={{ mb: 2 }}>
+                                    {error}
+                                </Alert>
+                            )}
+                        </Box>
+
+                        <Box sx={{ flex: 1 }}>
+                            <Modal
+                                open={showCamera || cameraLoading}
+                                onClose={stopCamera}
+                                closeAfterTransition
+                                BackdropComponent={Backdrop}
+                                BackdropProps={{
+                                    timeout: 500,
+                                    sx: { bgcolor: "rgba(0, 0, 0, 0.9)" },
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        position: "absolute",
+                                        top: "50%",
+                                        left: "50%",
+                                        transform: "translate(-50%, -50%)",
+                                        width: {
+                                            xs: "95vw",
+                                            sm: "80vw",
+                                            md: "60vw",
+                                        },
+                                        maxWidth: 600,
+                                        height: { xs: "70vh", sm: "60vh" },
+                                        bgcolor: "#18181b",
+                                        borderRadius: 2,
+                                        boxShadow: 24,
+                                        overflow: "hidden",
+                                        outline: "none",
+                                    }}
+                                >
+                                    {cameraLoading ? (
+                                        <Box
+                                            sx={{
+                                                width: "100%",
+                                                height: "100%",
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                bgcolor: "#18181b",
+                                                borderRadius: 2,
+                                            }}
+                                        >
+                                            <ThreeDot
+                                                color="#fbbf24"
+                                                size="medium"
+                                                text=""
+                                                textColor=""
+                                            />
+                                            <Typography
+                                                sx={{
+                                                    color: "#9ca3af",
+                                                    mt: 2,
+                                                    fontSize: "1.1rem",
+                                                }}
+                                            >
+                                                Starting camera...
+                                            </Typography>
+                                            <Box
+                                                sx={{
+                                                    position: "absolute",
+                                                    top: 16,
+                                                    right: 16,
+                                                }}
+                                            >
+                                                <Fab
+                                                    size="small"
+                                                    onClick={stopCamera}
+                                                    sx={{
+                                                        bgcolor:
+                                                            "rgba(0,0,0,0.6)",
+                                                        color: "white",
+                                                        "&:hover": {
+                                                            bgcolor:
+                                                                "rgba(0,0,0,0.8)",
+                                                        },
+                                                    }}
+                                                >
+                                                    <CloseIcon />
+                                                </Fab>
+                                            </Box>
+                                        </Box>
+                                    ) : (
+                                        <Paper
+                                            sx={{
+                                                position: "relative",
+                                                width: "100%",
+                                                height: "100%",
+                                                borderRadius: 2,
+                                                overflow: "hidden",
+                                                bgcolor: "#18181b",
+                                            }}
+                                        >
+                                            <video
+                                                ref={videoRef}
+                                                autoPlay
+                                                playsInline
+                                                muted
+                                                style={{
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    objectFit: "cover",
+                                                }}
+                                            />
+                                            <Box
+                                                sx={{
+                                                    position: "absolute",
+                                                    inset: 0,
+                                                    bgcolor: "white",
+                                                    opacity: flash ? 1 : 0,
+                                                    transition: "opacity 0.15s",
+                                                    pointerEvents: "none",
+                                                }}
+                                            />
+                                            <Box
+                                                sx={{
+                                                    position: "absolute",
+                                                    top: 16,
+                                                    right: 16,
+                                                }}
+                                            >
+                                                <Fab
+                                                    size="small"
+                                                    onClick={stopCamera}
+                                                    sx={{
+                                                        bgcolor:
+                                                            "rgba(0,0,0,0.6)",
+                                                        color: "white",
+                                                        "&:hover": {
+                                                            bgcolor:
+                                                                "rgba(0,0,0,0.8)",
+                                                        },
+                                                    }}
+                                                >
+                                                    <CloseIcon />
+                                                </Fab>
+                                            </Box>
+                                            <Box
+                                                sx={{
+                                                    position: "absolute",
+                                                    bottom: 20,
+                                                    left: "50%",
+                                                    transform:
+                                                        "translateX(-50%)",
+                                                }}
+                                            >
+                                                <Fab
+                                                    color="primary"
+                                                    onClick={capturePhoto}
+                                                    sx={{
+                                                        bgcolor: "#fbbf24",
+                                                        "&:hover": {
+                                                            bgcolor: "#f59e0b",
+                                                        },
+                                                        width: 64,
+                                                        height: 64,
+                                                    }}
+                                                >
+                                                    <PhotoCameraIcon
+                                                        sx={{ fontSize: 30 }}
+                                                    />
+                                                </Fab>
+                                            </Box>
+                                            <Box
+                                                sx={{
+                                                    position: "absolute",
+                                                    bottom: 20,
+                                                    right: 20,
+                                                }}
+                                            >
+                                                <Fab
+                                                    size="medium"
+                                                    onClick={flipCamera}
+                                                    sx={{
+                                                        bgcolor:
+                                                            "rgba(255,255,255,0.25)",
+                                                        "&:hover": {
+                                                            bgcolor:
+                                                                "rgba(255,255,255,0.4)",
+                                                        },
+                                                    }}
+                                                >
+                                                    <FlipCameraIcon />
+                                                </Fab>
+                                            </Box>
+                                        </Paper>
+                                    )}
+                                </Box>
+                            </Modal>
+
+                            {selectedFiles.length > 0 && (
+                                <Box
+                                    sx={{
+                                        mb: 3,
+                                        width: "100%",
+                                        maxWidth: {
+                                            xs: "100%",
+                                            sm: 480,
+                                            md: 600,
+                                        },
+                                        mx: "auto",
+                                    }}
+                                >
+                                    <Typography
+                                        variant="h6"
+                                        sx={{
+                                            color: "#d1d5db",
+                                            mb: 2,
+                                            fontSize: {
+                                                xs: "1rem",
+                                                sm: "1.25rem",
+                                            },
+                                        }}
+                                    >
+                                        Uploaded Pages ({selectedFiles.length}/
+                                        {MAX_FILES})
+                                    </Typography>
+
+                                    {selectedFiles.map((fileObj, index) => (
+                                        <Accordion
+                                            key={fileObj.id}
+                                            expanded={
+                                                expandedPanels[index] || false
+                                            }
+                                            onChange={handlePanelChange(index)}
+                                            sx={{
+                                                bgcolor: "#374151",
+                                                color: "white",
+                                                mb: 1,
+                                                "&:before": { display: "none" },
+                                                borderRadius: 1,
+                                            }}
+                                        >
+                                            <AccordionSummary
+                                                expandIcon={
+                                                    <ExpandMoreIcon
+                                                        sx={{
+                                                            color: "white",
+                                                            fontSize: {
+                                                                xs: "1.2rem",
+                                                                sm: "1.5rem",
+                                                            },
+                                                        }}
+                                                    />
+                                                }
+                                                sx={{
+                                                    minHeight: {
+                                                        xs: 48,
+                                                        sm: 56,
+                                                    },
+                                                    px: { xs: 1, sm: 2 },
+                                                }}
+                                            >
+                                                <Avatar
+                                                    sx={{
+                                                        mr: { xs: 1, sm: 2 },
+                                                        bgcolor: "#fbbf24",
+                                                        width: {
+                                                            xs: 32,
+                                                            sm: 40,
+                                                        },
+                                                        height: {
+                                                            xs: 32,
+                                                            sm: 40,
+                                                        },
+                                                        display: 
+                                                            "flex",
+                                                        
+                                                    }}
+                                                >
+                                                    <ImageIcon
+                                                        sx={{
+                                                            fontSize: {
+                                                                sm: "1.2rem",
+                                                            },
+                                                        }}
+                                                    />
+                                                </Avatar>
+                                                <Box
+                                                    sx={{
+                                                        flex: 1,
+                                                        minWidth: 0,
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        variant="subtitle1"
+                                                        sx={{
+                                                            fontSize: {
+                                                                xs: "0.875rem",
+                                                                sm: "1rem",
+                                                            },
+                                                            fontWeight: 600,
+                                                        }}
+                                                    >
+                                                        Page {index + 1}
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{
+                                                            color: "#9ca3af",
+                                                            fontSize: {
+                                                                xs: "0.75rem",
+                                                                sm: "0.875rem",
+                                                            },
+                                                            overflow: "hidden",
+                                                            textOverflow:
+                                                                "ellipsis",
+                                                            whiteSpace:
+                                                                "nowrap",
+                                                            maxWidth: {
+                                                                xs: "150px",
+                                                                sm: "300px",
+                                                            },
+                                                        }}
+                                                    >
+                                                        {fileObj.file.name}
+                                                    </Typography>
+                                                </Box>
+                                                <Chip
+                                                    label={
+                                                        fileObj.file.size > 0
+                                                            ? fileObj.file
+                                                                  .size <
+                                                              1024 * 1024
+                                                                ? `${(
+                                                                      fileObj
+                                                                          .file
+                                                                          .size /
+                                                                      1024
+                                                                  ).toFixed(
+                                                                      1
+                                                                  )}KB`
+                                                                : `${(
+                                                                      fileObj
+                                                                          .file
+                                                                          .size /
+                                                                      1024 /
+                                                                      1024
+                                                                  ).toFixed(
+                                                                      1
+                                                                  )}MB`
+                                                            : "~0.5MB"
+                                                    }
+                                                    size="small"
+                                                    sx={{
+                                                        mr: { xs: 0.5, sm: 1 },
+                                                        bgcolor: "#6b7280",
+                                                        color: "white",
+                                                        mt: 1.5,
+                                                        fontSize: {
+                                                            xs: "0.65rem",
+                                                            sm: "0.75rem",
+                                                        },
+                                                        height: {
+                                                            xs: 20,
+                                                            sm: 24,
+                                                        },
+                                                    }}
+                                                />
+                                                <IconButton
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        removeFile(index);
+                                                    }}
+                                                    size="small"
+                                                    sx={{
+                                                        color: "#ef4444",
+                                                        p: { xs: 0.5, sm: 1 },
+                                                    }}
+                                                >
+                                                    <DeleteIcon
+                                                        sx={{
+                                                            fontSize: {
+                                                                xs: "1rem",
+                                                                sm: "1.25rem",
+                                                            },
+                                                        }}
+                                                    />
+                                                </IconButton>
+                                            </AccordionSummary>
+                                            <AccordionDetails>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        gap: 2,
+                                                    }}
+                                                >
+                                                    <Box
+                                                        sx={{
+                                                            position:
+                                                                "relative",
+                                                            width: "100%",
+                                                            height: {
+                                                                xs: 250,
+                                                                sm: 300,
+                                                            },
+                                                            border: "2px solid #6b7280",
+                                                            borderRadius: 2,
+                                                            overflow: "hidden",
+                                                            bgcolor: "#18181b",
+                                                        }}
+                                                    >
+                                                        <img
+                                                            src={
+                                                                fileObj.previewUrl
+                                                            }
+                                                            alt={`Preview ${
+                                                                index + 1
+                                                            }`}
+                                                            style={{
+                                                                width: "100%",
+                                                                height: "100%",
+                                                                objectFit:
+                                                                    "contain",
+                                                            }}
+                                                        />
+                                                    </Box>
+
+                                                    <Stack
+                                                        direction={{
+                                                            xs: "column",
+                                                            sm: "row",
+                                                        }}
+                                                        spacing={2}
+                                                        justifyContent="center"
+                                                    >
+                                                        {hasCamera && (
+                                                            <Button
+                                                                variant="outlined"
+                                                                startIcon={
+                                                                    <PhotoCameraIcon />
+                                                                }
+                                                                onClick={() =>
+                                                                    handleCameraForItem(
+                                                                        index
+                                                                    )
+                                                                }
+                                                                size="small"
+                                                                sx={{
+                                                                    borderColor:
+                                                                        "#fbbf24",
+                                                                    color: "#fbbf24",
+                                                                    fontSize: {
+                                                                        xs: "0.75rem",
+                                                                        sm: "0.875rem",
+                                                                    },
+                                                                    "&:hover": {
+                                                                        borderColor:
+                                                                            "#f59e0b",
+                                                                        bgcolor:
+                                                                            "rgba(251,191,36,0.1)",
+                                                                    },
+                                                                }}
+                                                            >
+                                                                {showCamera
+                                                                    ? "Close Camera"
+                                                                    : "Retake Photo"}
+                                                            </Button>
+                                                        )}
+                                                        <Button
+                                                            variant="outlined"
+                                                            startIcon={
+                                                                <UploadIcon />
+                                                            }
+                                                            onClick={() =>
+                                                                handleUploadForItem(
+                                                                    index
+                                                                )
+                                                            }
+                                                            size="small"
+                                                            sx={{
+                                                                borderColor:
+                                                                    "white",
+                                                                color: "white",
+                                                                fontSize: {
+                                                                    xs: "0.75rem",
+                                                                    sm: "0.875rem",
+                                                                },
+                                                                "&:hover": {
+                                                                    borderColor:
+                                                                        "#d1d5db",
+                                                                    bgcolor:
+                                                                        "rgba(255,255,255,0.1)",
+                                                                },
+                                                            }}
+                                                        >
+                                                            Replace Image
+                                                        </Button>
+                                                    </Stack>
+                                                </Box>
+                                            </AccordionDetails>
+                                        </Accordion>
+                                    ))}
+                                </Box>
+                            )}
+
+                            {selectedFiles.length === 0 && (
+                                <Paper
+                                    onClick={() => {
+                                        setReplacingIndex(null);
+                                        fileInputRef.current.click();
+                                    }}
+                                    sx={{
+                                        position: "relative",
+                                        width: "100%",
+                                        maxWidth: 480,
+                                        height: { xs: 300, sm: 370 },
+                                        mx: "auto",
+                                        mb: 3,
+                                        borderRadius: 2,
+                                        bgcolor: "#18181b",
+                                        border: "2px dashed #6b7280",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s",
+                                        "&:hover": {
+                                            borderColor: "#fbbf24",
+                                            bgcolor: "rgba(251,191,36,0.05)",
+                                        },
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            textAlign: "center",
+                                            color: "#9ca3af",
+                                        }}
+                                    >
+                                        <UploadIcon
+                                            sx={{ fontSize: 48, mb: 2 }}
+                                        />
+                                        <Typography variant="h6">
+                                            Click here to upload your bill
+                                        </Typography>
+                                    </Box>
+                                </Paper>
+                            )}
 
                             <input
                                 type="file"
                                 ref={fileInputRef}
                                 onChange={handleFileChange}
                                 accept="image/png, image/jpeg"
+                                multiple
                                 className="hidden"
                             />
 
-                            <div className="flex flex-wrap justify-center gap-4 px-2">
-                                {hasCamera && (
-                                    <button
+                            <Stack
+                                direction="row"
+                                spacing={2}
+                                justifyContent="center"
+                                flexWrap="wrap"
+                            >
+                                {selectedFiles.length > 0 &&
+                                    selectedFiles.length < MAX_FILES && (
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<AddIcon />}
+                                            onClick={addNextPage}
+                                            sx={{
+                                                borderColor: "#fbbf24",
+                                                color: "#fbbf24",
+                                                "&:hover": {
+                                                    borderColor: "#f59e0b",
+                                                    bgcolor:
+                                                        "rgba(251,191,36,0.1)",
+                                                },
+                                            }}
+                                        >
+                                            Add Next Page
+                                        </Button>
+                                    )}
+
+                                {hasCamera && selectedFiles.length === 0 && (
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={
+                                            showCamera ? (
+                                                <CloseIcon />
+                                            ) : (
+                                                <PhotoCameraIcon />
+                                            )
+                                        }
                                         onClick={toggleCamera}
-                                        className={`
-                                            px-6 py-2 
-                                            border-2 border-white 
-                                            rounded-full 
-                                            hover:bg-yellow-300 hover:text-black 
-                                            flex items-center justify-center gap-2 cursor-pointer 
-                                            w-full md:w-55
-                                        `}
+                                        sx={{
+                                            borderColor: "white",
+                                            color: "white",
+                                            "&:hover": {
+                                                borderColor: "#d1d5db",
+                                                bgcolor:
+                                                    "rgba(255,255,255,0.1)",
+                                            },
+                                        }}
                                     >
-                                        {showCamera ? (
-                                            <HiOutlineX />
-                                        ) : (
-                                            <HiCamera />
-                                        )}
                                         {showCamera
                                             ? "Close Camera"
                                             : "Open Camera"}
-                                    </button>
+                                    </Button>
                                 )}
 
-                                <button
+                                <Button
+                                    variant="contained"
+                                    startIcon={<UploadIcon />}
                                     onClick={handleUpload}
-                                    disabled={!selectedFile}
-                                    className={`
-                                        px-6 py-2 border-2 rounded-full flex items-center justify-center gap-2 
-                                        w-full md:w-55
-                                        ${
-                                            selectedFile
-                                                ? "border-white hover:bg-yellow-300 hover:text-black cursor-pointer"
-                                                : "border-gray-600 bg-gray-600 cursor-not-allowed"
-                                        }
-                                    `}
+                                    disabled={selectedFiles.length === 0}
+                                    sx={{
+                                        bgcolor:
+                                            selectedFiles.length > 0
+                                                ? "#fbbf24"
+                                                : "#6b7280",
+                                        color:
+                                            selectedFiles.length > 0
+                                                ? "black"
+                                                : "white",
+                                        "&:hover": {
+                                            bgcolor:
+                                                selectedFiles.length > 0
+                                                    ? "#f59e0b"
+                                                    : "#6b7280",
+                                        },
+                                        "&:disabled": {
+                                            bgcolor: "#6b7280",
+                                            color: "white",
+                                        },
+                                    }}
                                 >
-                                    <HiUpload />
-                                    Upload Bill
-                                </button>
-                            </div>
-                        </section>
-                    </div>
-                </div>
+                                    Upload{" "}
+                                    {selectedFiles.length > 1
+                                        ? "Bills"
+                                        : "Bill"}
+                                </Button>
+                            </Stack>
+                        </Box>
+                    </Box>
+                </Box>
             </main>
         </div>
     );

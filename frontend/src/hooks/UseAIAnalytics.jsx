@@ -1,10 +1,9 @@
 import { useState, useCallback } from "react";
-import { doc, getDoc, setDoc } from "firebase/firestore"; // ✅ doc (not collection)
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
 
 const API_URL = "http://localhost:8000";
 
-// Simple hash function using JSON.stringify (can be replaced with real hash)
 const generateDataHash = (bills) =>
   JSON.stringify(bills.map((b) => [b.tooltipLabel, b.value]));
 
@@ -22,7 +21,6 @@ export const UseAIAnalytics = () => {
 
   const fetchAnalytics = useCallback(
     async (bills, category, year, userId) => {
-      // ✅ Guard clause to prevent runtime errors
       if (!userId || !category || !year || !Array.isArray(bills)) {
         console.warn("Missing or invalid parameters for fetchAnalytics");
         return;
@@ -37,7 +35,6 @@ export const UseAIAnalytics = () => {
       setError("");
 
       try {
-        // ✅ FIX: Use doc() instead of collection()
         const docRef = doc(
           db,
           "users",
@@ -69,11 +66,11 @@ export const UseAIAnalytics = () => {
             setSummary(data.summary || "No summary found.");
             setSuggestion(data.suggestion || "No suggestion found.");
             setLastFetched({ category, year });
-            console.log("✅ Loaded summary from Firestore cache (hash match)");
+            console.log("Loaded summary from Firestore cache (hash match)");
             return;
           }
 
-          console.log("⚠️ Bill data changed, regenerating summary...");
+          console.log("Bill data changed, regenerating summary...");
         }
 
         const response = await fetch(`${API_URL}/bill/analytics`, {

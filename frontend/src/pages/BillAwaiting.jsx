@@ -1,20 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import LinearProgress from "@mui/material/LinearProgress";
 
 export default function BillAwaiting() {
     const location = useLocation();
     const navigate = useNavigate();
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
-
-    const messages = ["Analyzing Bill", "Reading Bill", "Summarizing Bill"];
-
-    const [messageIndex, setMessageIndex] = useState(0);
     const [dotCount, setDotCount] = useState(0);
 
     useEffect(() => {
-        const file = location.state?.file;
-        if (!file) {
+        if (!loading) return;
+        const dotInterval = setInterval(() => {
+            setDotCount((prev) => (prev + 1) % 4);
+        }, 800);
+        return () => clearInterval(dotInterval);
+    }, [loading]);
+
+    useEffect(() => {
+        const files = location.state?.files;
+        const singleFile = location.state?.file;
+
+        if (!files && !singleFile) {
             setError("No image file provided.");
             setLoading(false);
             setTimeout(() => navigate("/bill/summarization"), 1500);
@@ -23,93 +30,122 @@ export default function BillAwaiting() {
 
         const controller = new AbortController();
         const formData = new FormData();
-        formData.append("prompt_img", file);
 
-        fetch("http://localhost:8000/bill/bill_reading", {
-            method: "POST",
-            body: formData,
-            signal: controller.signal,
-        })
-            .then(async (res) => {
-                if (!res.ok) {
-                    throw new Error("Failed to process the bill image.");
-                }
-                const data = await res.json();
-                let billData;
-                try {
-                    billData =
-                        typeof data.response === "string"
-                            ? JSON.parse(data.response)
-                            : data.response;
-                } catch {
-                    throw new Error("Failed to parse response.");
-                }
-                navigate("/bill/result", {
-                    state: { billData, file },
-                });
-            })
-            .catch((err) => {
-                if (err.name !== "AbortError") {
-                    setError(err.message);
-                    setLoading(false);
-                }
+        if (files && files.length > 1) {
+            // Multiple files - use bill_reading_v2
+            files.forEach((file) => {
+                formData.append("prompt_imgs", file);
             });
+
+            fetch("http://localhost:8000/bill/bill_reading_v2", {
+                method: "POST",
+                body: formData,
+                signal: controller.signal,
+            })
+                .then(async (res) => {
+                    if (!res.ok) {
+                        throw new Error("Failed to process the bill images.");
+                    }
+                    const data = await res.json();
+                    let billData;
+                    try {
+                        billData =
+                            typeof data.response === "string"
+                                ? JSON.parse(data.response)
+                                : data.response;
+                    } catch {
+                        throw new Error("Failed to parse response.");
+                    }
+                    setTimeout(() => {
+                        navigate("/bill/result", {
+                            state: { billData, files },
+                        });
+                    }, 400);
+                })
+                .catch((err) => {
+                    if (err.name !== "AbortError") {
+                        setError(err.message);
+                        setLoading(false);
+                    }
+                });
+        } else {
+            // Single file - use original endpoint
+            const fileToProcess = files ? files[0] : singleFile;
+            formData.append("prompt_img", fileToProcess);
+
+            fetch("http://localhost:8000/bill/bill_reading", {
+                method: "POST",
+                body: formData,
+                signal: controller.signal,
+            })
+                .then(async (res) => {
+                    if (!res.ok) {
+                        throw new Error("Failed to process the bill image.");
+                    }
+                    const data = await res.json();
+                    let billData;
+                    try {
+                        billData =
+                            typeof data.response === "string"
+                                ? JSON.parse(data.response)
+                                : data.response;
+                    } catch {
+                        throw new Error("Failed to parse response.");
+                    }
+                    setTimeout(() => {
+                        navigate("/bill/result", {
+                            state: { billData, file: fileToProcess },
+                        });
+                    }, 400);
+                })
+                .catch((err) => {
+                    if (err.name !== "AbortError") {
+                        setError(err.message);
+                        setLoading(false);
+                    }
+                });
+        }
 
         return () => {
             controller.abort();
         };
     }, [location, navigate]);
 
-    useEffect(() => {
-        if (!loading) return;
-
-        const interval = setInterval(() => {
-            setMessageIndex((prev) => (prev + 1) % messages.length);
-        }, 3000);
-
-        const dotInterval = setInterval(() => {
-            setDotCount((prev) => (prev + 1) % 4);
-        }, 500);
-
-        return () => {
-            clearInterval(interval);
-            clearInterval(dotInterval);
-        };
-    }, [loading]);
-
     const dots = ".".repeat(dotCount);
+
+    let progressText = "";
+    if (error) {
+        progressText = "";
+    } else if (loading) {
+        progressText = "Analyzing" + dots;
+    }
 
     return (
         <div className="flex h-screen w-screen bg-[#1B1C21] text-white px-4">
             <div className="flex-1 flex flex-col items-center justify-center">
                 <div className="w-full max-w-2xl flex flex-col items-center">
-                    <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl flex flex-col items-center justify-center w-full max-w-[400px] h-[300px] p-6 shadow-2xl">
+                    <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl flex flex-col items-center justify-center w-full max-w-[95vw] md:max-w-[600px] h-[320px] md:h-[340px] p-6 shadow-2xl">
                         {loading && !error && (
                             <>
-                                {/* Spinner */}
-                                <svg
-                                    className="animate-spin h-12 w-12 text-yellow-300 mb-4"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <circle
-                                        className="opacity-20"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                        fill="none"
-                                    />
-                                    <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8v8z"
-                                    />
-                                </svg>
-                                <span className="text-lg md:text-2xl font-bold text-center text-white">
-                                    {messages[messageIndex]}
-                                    {dots}
+                                <span className="text-lg md:text-2xl font-bold text-center text-white mb-6">
+                                    {progressText}
                                 </span>
+                                <div className="w-full flex flex-col items-center">
+                                    <LinearProgress
+                                        variant="indeterminate"
+                                        sx={{
+                                            height: 12,
+                                            borderRadius: 6,
+                                            width: "100%",
+                                            backgroundColor:
+                                                "rgba(255,255,255,0.15)",
+                                            "& .MuiLinearProgress-bar": {
+                                                background:
+                                                    "linear-gradient(90deg, #FFD600 0%, #FFEA00 100%)",
+                                            },
+                                        }}
+                                    />
+                                </div>
                             </>
                         )}
                         {error && (

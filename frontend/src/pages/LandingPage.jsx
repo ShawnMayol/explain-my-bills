@@ -1,20 +1,51 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
 import { useAuth } from "../context/AuthContext";
 import SplashScreen from "../components/SplashScreen";
+import toast from "react-hot-toast";
 
 export default function LandingPage() {
     const { user, loading } = useAuth();
     const navigate = useNavigate();
 
+    const timeBasedGreeting = useMemo(() => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good morning";
+        if (hour < 18) return "Good afternoon";
+        return "Good evening";
+    }, []);
+
     const handleLogout = async () => {
         try {
+            const username = user.displayName;
+
             await signOut(auth);
+
+            const goodbyeMessages = [
+                `See you soon, ${username}!`,
+                `Goodbye, ${username}! Come back anytime!`,
+                `Thanks for using Explain My Bills, ${username}!`,
+                `Have a great day, ${username}!`,
+            ];
+            const randomMessage =
+                goodbyeMessages[
+                    Math.floor(Math.random() * goodbyeMessages.length)
+                ];
+
+            toast.success(randomMessage, {
+                style: { fontSize: "16px" },
+                icon: "👋",
+            });
             navigate("/");
         } catch (error) {
             console.error("Error signing out:", error);
+            toast.error("Error signing out. Please try again.", {
+                style: {
+                    fontSize: "16px",
+                },
+            });
         }
     };
 
@@ -29,10 +60,12 @@ export default function LandingPage() {
             <div className="z-10">
                 <p className="text-lg md:text-2xl mb-2 font-semibold">
                     <span className="text-yellow-300">
-                        {user ? "Welcome Back" : "Welcome"}
+                        {user ? timeBasedGreeting : "Welcome"}
                     </span>
                     {user && (
-                        <span className="text-white">{`, ${user.displayName}!`}</span>
+                        <span className="text-white">{`, ${
+                            user.displayName || user.email.split("@")[0]
+                        }!`}</span>
                     )}
                     {!user && <span className="text-white">!</span>}
                 </p>
