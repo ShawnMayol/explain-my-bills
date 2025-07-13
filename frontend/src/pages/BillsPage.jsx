@@ -24,8 +24,16 @@ export default function BillsPage() {
     const [editingBill, setEditingBill] = useState(null);
     const [formData, setFormData] = useState({
         name: "",
-        dayOfMonth: "",
+        interval: "Monthly",
+        lastPaymentDate: "",
     });
+
+    const intervalOptions = [
+        { value: "Weekly", label: "Weekly", days: 7 },
+        { value: "Monthly", label: "Monthly", days: 30 },
+        { value: "Bi-Annually", label: "Bi-Annually", days: 182 },
+        { value: "Annually", label: "Annually", days: 365 }
+    ];
 
     useEffect(() => {
         if (user) {
@@ -57,33 +65,47 @@ export default function BillsPage() {
         }
     };
 
-    const getNextBillDate = (dayOfMonth) => {
-        const today = new Date();
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-        const currentDay = today.getDate();
-        
-        let nextMonth = currentMonth;
-        let nextYear = currentYear;
-        
-        if (dayOfMonth <= currentDay) {
-            nextMonth = currentMonth + 1;
-            if (nextMonth > 11) {
-                nextMonth = 0;
-                nextYear = currentYear + 1;
-            }
-        }
-        
-        const nextBillDate = new Date(nextYear, nextMonth, dayOfMonth);
-        return nextBillDate.toLocaleDateString('en-US', {
+    const getNextPaymentDate = (lastPaymentDate, interval) => {
+        const intervalData = intervalOptions.find(opt => opt.value === interval);
+        if (!intervalData || !lastPaymentDate) return "Invalid date";
+
+        const lastDate = new Date(lastPaymentDate);
+        const nextDate = new Date(lastDate);
+        nextDate.setDate(lastDate.getDate() + intervalData.days);
+
+        return nextDate.toLocaleDateString('en-US', {
             month: 'long',
             day: 'numeric',
             year: 'numeric'
         });
     };
 
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    };
+
+    const getDaysUntilNext = (lastPaymentDate, interval) => {
+        const intervalData = intervalOptions.find(opt => opt.value === interval);
+        if (!intervalData || !lastPaymentDate) return 0;
+
+        const lastDate = new Date(lastPaymentDate);
+        const nextDate = new Date(lastDate);
+        nextDate.setDate(lastDate.getDate() + intervalData.days);
+        
+        const today = new Date();
+        const diffTime = nextDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        return diffDays;
+    };
+
     const handleAddBill = () => {
-        setFormData({ name: "", dayOfMonth: "" });
+        setFormData({ name: "", interval: "Monthly", lastPaymentDate: "" });
         setEditingBill(null);
         setShowAddModal(true);
     };
@@ -91,7 +113,8 @@ export default function BillsPage() {
     const handleEditBill = (bill) => {
         setFormData({
             name: bill.name,
-            dayOfMonth: bill.dayOfMonth.toString(),
+            interval: bill.interval,
+            lastPaymentDate: bill.lastPaymentDate,
         });
         setEditingBill(bill);
         setShowAddModal(true);
@@ -99,23 +122,22 @@ export default function BillsPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.name.trim() || !formData.dayOfMonth) return;
-
-        const dayOfMonth = parseInt(formData.dayOfMonth);
-        if (dayOfMonth < 1 || dayOfMonth > 31) return;
+        if (!formData.name.trim() || !formData.interval || !formData.lastPaymentDate) return;
 
         try {
             if (editingBill) {
                 const billRef = doc(db, "bills", editingBill.id);
                 await updateDoc(billRef, {
                     name: formData.name.trim(),
-                    dayOfMonth: dayOfMonth,
+                    interval: formData.interval,
+                    lastPaymentDate: formData.lastPaymentDate,
                     updatedAt: new Date()
                 });
             } else {
                 await addDoc(collection(db, "bills"), {
                     name: formData.name.trim(),
-                    dayOfMonth: dayOfMonth,
+                    interval: formData.interval,
+                    lastPaymentDate: formData.lastPaymentDate,
                     userId: user.uid,
                     createdAt: new Date(),
                     updatedAt: new Date()
@@ -124,7 +146,7 @@ export default function BillsPage() {
 
             await loadBills();
             setShowAddModal(false);
-            setFormData({ name: "", dayOfMonth: "" });
+            setFormData({ name: "", interval: "Monthly", lastPaymentDate: "" });
             setEditingBill(null);
         } catch (error) {
             console.error("Error saving bill:", error);
@@ -142,7 +164,7 @@ export default function BillsPage() {
 
     const closeModal = () => {
         setShowAddModal(false);
-        setFormData({ name: "", dayOfMonth: "" });
+        setFormData({ name: "", interval: "Monthly", lastPaymentDate: "" });
         setEditingBill(null);
     };
 
@@ -184,38 +206,71 @@ export default function BillsPage() {
                             <p className="text-gray-500 text-sm mt-2">Click "Add Recurring Bill" to get started</p>
                         </div>
                     ) : (
-                        bills.map((bill) => (
-                            <div
-                                key={bill.id}
-                                className="bg-zinc-900 border border-white/30 rounded-xl px-4 md:px-6 py-4 md:py-5 flex flex-col md:flex-row md:items-center md:justify-between shadow"
-                            >
-                                <div className="flex-1">
-                                    <span className="font-bold text-white text-base md:text-lg">
-                                        {bill.name}
-                                    </span>
-                                    <p className="text-gray-300 text-sm md:text-base mt-1">
-                                        Next Bill Date: {getNextBillDate(bill.dayOfMonth)}
-                                    </p>
-                                    <p className="text-gray-400 text-xs md:text-sm mt-1">
-                                        Due on day {bill.dayOfMonth} of each month
-                                    </p>
+                        bills.map((bill) => {
+                            const daysUntilNext = getDaysUntilNext(bill.lastPaymentDate, bill.interval);
+                            const isOverdue = daysUntilNext < 0;
+                            const isDueSoon = daysUntilNext <= 3 && daysUntilNext >= 0;
+                            
+                            return (
+                                <div
+                                    key={bill.id}
+                                    className={`bg-zinc-900 border rounded-xl px-4 md:px-6 py-4 md:py-5 flex flex-col md:flex-row md:items-center md:justify-between shadow ${
+                                        isOverdue ? 'border-red-500/50 bg-red-900/20' : 
+                                        isDueSoon ? 'border-yellow-500/50 bg-yellow-900/20' : 
+                                        'border-white/30'
+                                    }`}
+                                >
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="font-bold text-white text-base md:text-lg">
+                                                {bill.name}
+                                            </span>
+                                            <span className={`text-xs px-2 py-1 rounded-full ${
+                                                isOverdue ? 'bg-red-500 text-white' :
+                                                isDueSoon ? 'bg-yellow-500 text-black' :
+                                                'bg-gray-600 text-gray-300'
+                                            }`}>
+                                                {bill.interval}
+                                            </span>
+                                        </div>
+                                        <p className="text-gray-300 text-sm md:text-base">
+                                            Recent Payment: {formatDate(bill.lastPaymentDate)}
+                                        </p>
+                                        <p className={`text-sm md:text-base ${
+                                            isOverdue ? 'text-red-400' :
+                                            isDueSoon ? 'text-yellow-400' :
+                                            'text-gray-400'
+                                        }`}>
+                                            Next Payment: {getNextPaymentDate(bill.lastPaymentDate, bill.interval)}
+                                            {isOverdue && (
+                                                <span className="ml-2 text-red-500 font-semibold">
+                                                    ({Math.abs(daysUntilNext)} days overdue)
+                                                </span>
+                                            )}
+                                            {isDueSoon && !isOverdue && (
+                                                <span className="ml-2 text-yellow-500 font-semibold">
+                                                    ({daysUntilNext} days remaining)
+                                                </span>
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2 mt-4 md:mt-0">
+                                        <button 
+                                            onClick={() => handleEditBill(bill)}
+                                            className="border-2 border-yellow-300 text-yellow-300 rounded-full px-4 md:px-6 py-2 text-sm md:text-base font-bold hover:bg-yellow-300 hover:text-black transition"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDeleteBill(bill.id)}
+                                            className="border-2 border-red-500 text-red-500 rounded-full px-4 md:px-6 py-2 text-sm md:text-base font-bold hover:bg-red-500 hover:text-white transition"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="flex gap-2 mt-4 md:mt-0">
-                                    <button 
-                                        onClick={() => handleEditBill(bill)}
-                                        className="border-2 border-yellow-300 text-yellow-300 rounded-full px-4 md:px-6 py-2 text-sm md:text-base font-bold hover:bg-yellow-300 hover:text-black transition"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button 
-                                        onClick={() => handleDeleteBill(bill.id)}
-                                        className="border-2 border-red-500 text-red-500 rounded-full px-4 md:px-6 py-2 text-sm md:text-base font-bold hover:bg-red-500 hover:text-white transition"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
 
@@ -251,16 +306,30 @@ export default function BillsPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Day of Month (1-31)
+                                    Payment Interval
+                                </label>
+                                <select
+                                    value={formData.interval}
+                                    onChange={(e) => setFormData({ ...formData, interval: e.target.value })}
+                                    className="w-full border border-gray-600 rounded-lg p-3 bg-zinc-800 text-white focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                                    required
+                                >
+                                    {intervalOptions.map(option => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Last Payment Date
                                 </label>
                                 <input
-                                    type="number"
-                                    min="1"
-                                    max="31"
-                                    value={formData.dayOfMonth}
-                                    onChange={(e) => setFormData({ ...formData, dayOfMonth: e.target.value })}
-                                    className="w-full border border-gray-600 rounded-lg p-3 bg-zinc-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                                    placeholder="Enter day of month"
+                                    type="date"
+                                    value={formData.lastPaymentDate}
+                                    onChange={(e) => setFormData({ ...formData, lastPaymentDate: e.target.value })}
+                                    className="w-full border border-gray-600 rounded-lg p-3 bg-zinc-800 text-white focus:outline-none focus:ring-2 focus:ring-yellow-300"
                                     required
                                 />
                             </div>
