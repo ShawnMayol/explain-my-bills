@@ -22,7 +22,7 @@ import {
 } from "@mui/material";
 import toast, { Toaster } from "react-hot-toast";
 
-const API_URL = import.meta.env.BACKEND_API_URL;
+const API_URL = "explain-my-bills.up.railway.app";
 
 export default function BillDetail() {
   const { billId } = useParams();
