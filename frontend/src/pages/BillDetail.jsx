@@ -205,12 +205,12 @@ export default function BillDetail() {
                     </button>
                 </div>
 
-                <div className="flex-1 p-4 pt-[3.5rem] md:ml-64">
-                    <div className="max-w-4xl mx-auto">
+                <main className="w-full md:ml-[20%] flex-1 flex flex-col items-center px-4 md:px-10 py-12 min-h-screen mt-4">
+                    <div className="w-full max-w-6xl">
                         <div className="flex justify-between items-center mb-6">
-                            <h1 className="text-2xl font-bold text-yellow-300">
+                            <span className="text-yellow-300 font-semibold text-xl md:text-2xl">
                                 Bill Details
-                            </h1>
+                            </span>
 
                             <div className="relative" ref={dropdownRef}>
                                 <button
@@ -248,15 +248,15 @@ export default function BillDetail() {
                             </div>
                         </div>
 
-                        <div className="flex flex-col md:flex-row gap-12">
-                            <div className="flex-shrink-0 flex flex-col items-center">
-                                <div className="w-[300px] md:w-[400px] h-[400px] bg-zinc-900 border-2 rounded-lg flex items-center justify-center mb-4">
-                                    <div className="w-full h-full bg-zinc-800 rounded animate-pulse"></div>
+                        <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
+                            <div className="flex-shrink-0 w-full lg:w-auto flex flex-col items-center">
+                                <div className="relative w-full max-w-[300px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-[300px] xl:max-w-[400px] aspect-square bg-zinc-900 border-2 rounded-lg flex items-center justify-center mb-4">
+                                    <div className="w-[400px] h-[400px] bg-zinc-800 rounded animate-pulse"></div>
                                 </div>
                             </div>
 
-                            <section className="flex-1 flex flex-col space-y-6">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4">
+                            <section className="flex-1 flex flex-col space-y-6 w-full min-w-0">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-8 lg:gap-x-12 gap-y-4">
                                     <div>
                                         <b className="text-yellow-300">
                                             Bill Type:
@@ -327,13 +327,13 @@ export default function BillDetail() {
                                         onClick={() => navigate("/dashboard")}
                                         className="px-6 py-2 border-2 border-white rounded-full hover:bg-yellow-300 hover:text-black cursor-pointer"
                                     >
-                                        Back to Dashboard
+                                        Back
                                     </button>
                                 </div>
                             </section>
                         </div>
                     </div>
-                </div>
+                </main>
             </div>
         );
     }
@@ -437,12 +437,12 @@ export default function BillDetail() {
                     </div>
                 )}
 
-                <div className="flex-1 p-4 pt-[3.5rem] md:ml-64">
-                    <div className="max-w-4xl mx-auto">
+                <main className="w-full md:ml-[20%] flex-1 flex flex-col items-center px-4 md:px-10 py-12 min-h-screen mt-4">
+                    <div className="w-full max-w-6xl">
                         <div className="flex justify-between items-center mb-6">
-                            <h1 className="text-2xl font-bold text-yellow-300">
+                            <span className="text-yellow-300 font-semibold text-xl md:text-2xl">
                                 Bill Details
-                            </h1>
+                            </span>
 
                             <div className="relative" ref={dropdownRef}>
                                 <button
@@ -455,7 +455,7 @@ export default function BillDetail() {
                                 </button>
 
                                 {showDropdown && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-zinc-800 border border-zinc-700 rounded-xl shadow-lg z-40">
+                                    <div className="absolute right-0 mt-2 w-48 bg-zinc-800 border border-zinc-700 rounded-md shadow-lg z-40">
                                         <ul className="p-1">
                                             <li>
                                                 <button
@@ -465,7 +465,7 @@ export default function BillDetail() {
                                                             true
                                                         );
                                                     }}
-                                                    className="w-full text-left px-4 py-2 text-white hover:bg-zinc-700 rounded-xl flex items-center space-x-2 cursor-pointer align-center"
+                                                    className="w-full text-left px-4 py-2 text-white hover:bg-zinc-700 flex items-center space-x-2 cursor-pointer"
                                                 >
                                                     <HiTrash className="w-4 h-4 text-red-500" />
                                                     <span>Delete Bill</span>
@@ -476,10 +476,9 @@ export default function BillDetail() {
                                 )}
                             </div>
                         </div>
-
-                        <div className="flex flex-col md:flex-row gap-12">
-                            <div className="flex-shrink-0 flex flex-col items-center">
-                                <div className="relative w-[300px] md:w-[400px] h-[400px] bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
+                        <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
+                            <div className="flex-shrink-0 w-full lg:w-auto flex flex-col items-center">
+                                <div className="relative w-full max-w-[300px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-[300px] xl:max-w-[400px] aspect-square bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
                                     {imgUrls.length > 0 ? (
                                         <>
                                             <img
@@ -529,8 +528,8 @@ export default function BillDetail() {
                                 </div>
                             </div>
 
-                            <section className="flex-1 flex flex-col space-y-6">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4">
+                            <section className="flex-1 flex flex-col space-y-6 w-full min-w-0">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-8 lg:gap-x-12 gap-y-4">
                                     <InfoItem
                                         label="Bill Type"
                                         value={billData.billType}
@@ -585,18 +584,19 @@ export default function BillDetail() {
                                     content={billData.discrepancies || "None"}
                                 />
 
-                                <div className="flex justify-end gap-4">
+                                <div className="justify-end flex mt-6 mb-10">
+                                    
                                     <button
                                         onClick={() => navigate("/dashboard")}
-                                        className="px-6 py-2 border-2 border-white rounded-full hover:bg-yellow-300 hover:text-black cursor-pointer"
+                                        className="w-full sm:w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-yellow-300 hover:text-black transition cursor-pointer"
                                     >
-                                        Back to Dashboard
+                                        Back
                                     </button>
                                 </div>
                             </section>
                         </div>
                     </div>
-                </div>
+                </main>
 
                 {showDeleteDialog && (
                     <Dialog
