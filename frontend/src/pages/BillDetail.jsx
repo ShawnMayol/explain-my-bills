@@ -22,6 +22,8 @@ import {
 } from "@mui/material";
 import toast, { Toaster } from "react-hot-toast";
 
+const API_URL = "https://explain-my-bills.onrender.com";
+
 export default function BillDetail() {
     const { billId } = useParams();
     const navigate = useNavigate();
@@ -117,7 +119,7 @@ export default function BillDetail() {
                 for (const publicId of billData.publicIds) {
                     console.log("Deleting image with public ID:", publicId);
                     const response = await fetch(
-                        "http://127.0.0.1:8000/delete-cloudinary",
+                        `${API_URL}/delete-cloudinary`,
                         {
                             method: "DELETE",
                             headers: {
@@ -142,7 +144,7 @@ export default function BillDetail() {
                     billData.publicId
                 );
                 const response = await fetch(
-                    "http://127.0.0.1:8000/delete-cloudinary",
+                    `${API_URL}/delete-cloudinary`,
                     {
                         method: "DELETE",
                         headers: {
