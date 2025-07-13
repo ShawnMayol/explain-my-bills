@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     reauthenticateWithCredential,
@@ -7,6 +7,9 @@ import {
 } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
 import { useAuth } from "../context/AuthContext";
+import { HiEye, HiEyeOff } from "react-icons/hi";
+import toast from "react-hot-toast";
+import { ThreeDot } from "react-loading-indicators";
 
 export default function ChangePassword() {
     const { user } = useAuth();
@@ -15,37 +18,56 @@ export default function ChangePassword() {
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+    const [showOldPassword, setShowOldPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [validationError, setValidationError] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const isGoogle = user?.providerData.some(
         (p) => p.providerId === "google.com"
     );
 
+    useEffect(() => {
+        if (isGoogle) {
+            window.open(
+                "https://myaccount.google.com/security/signinoptions/password",
+                "_blank"
+            );
+            navigate("/profile");
+        }
+    }, [isGoogle, navigate]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
-        setSuccess("");
-
-        if (isGoogle) {
-            setError(
-                "Password change is unavailable for Google sign-in accounts."
-            );
-            return;
-        }
+        setValidationError("");
 
         if (!oldPassword || !newPassword || !confirmNewPassword) {
-            setError("Please fill in all fields.");
+            toast.error("Please fill in all fields.", {
+                style: {
+                    fontSize: "16px",
+                },
+            });
             return;
         }
         if (newPassword !== confirmNewPassword) {
-            setError("New passwords do not match.");
+            toast.error("New passwords do not match.", {
+                style: {
+                    fontSize: "16px",
+                },
+            });
             return;
         }
         if (newPassword.length < 6) {
-            setError("New password must be at least 6 characters.");
+            toast.error("New password must be at least 6 characters.", {
+                style: {
+                    fontSize: "16px",
+                },
+            });
             return;
         }
+
+        setIsSubmitting(true);
 
         try {
             const credential = EmailAuthProvider.credential(
@@ -54,16 +76,86 @@ export default function ChangePassword() {
             );
             await reauthenticateWithCredential(user, credential);
             await updatePassword(user, newPassword);
-            setSuccess("Password changed successfully!");
-            setTimeout(() => navigate("/profile"), 1000);
+            toast.success("Password changed successfully!", {
+                style: {
+                    fontSize: "16px",
+                },
+            });
+            navigate("/profile");
         } catch (err) {
-            if (err.code === "auth/wrong-password") {
-                setError("Old password is incorrect.");
-            } else {
-                setError("Failed to change password. Please try again.");
+            console.error("Password change error:", err.code, err.message);
+
+            // Handle specific Firebase authentication errors
+            switch (err.code) {
+                case "auth/wrong-password":
+                    toast.error("Old password is incorrect.", {
+                        style: { fontSize: "16px" },
+                    });
+                    break;
+                case "auth/weak-password":
+                    toast.error(
+                        "Password is too weak. Choose a stronger password.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    break;
+                case "auth/requires-recent-login":
+                    toast.error(
+                        "This action requires recent authentication. Please log in again.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    setTimeout(() => {
+                        // Sign out the user and redirect to login
+                        auth.signOut().then(() => navigate("/signin"));
+                    }, 2000);
+                    break;
+                case "auth/user-token-expired":
+                    toast.error(
+                        "Your session has expired. Please log in again.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    setTimeout(() => {
+                        auth.signOut().then(() => navigate("/signin"));
+                    }, 2000);
+                    break;
+                case "auth/too-many-requests":
+                    toast.error(
+                        "Too many unsuccessful attempts. Please try again later.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    break;
+                case "auth/network-request-failed":
+                    toast.error(
+                        "Network error. Please check your internet connection.",
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
+                    break;
+                default:
+                    toast.error(
+                        `Failed to change password: ${
+                            err.message || "Please try again."
+                        }`,
+                        {
+                            style: { fontSize: "16px" },
+                        }
+                    );
             }
+            setIsSubmitting(false);
         }
     };
+
+    if (isGoogle) {
+        return null;
+    }
 
     return (
         <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#1B1C21] text-white px-4">
@@ -75,70 +167,156 @@ export default function ChangePassword() {
                     onSubmit={handleSubmit}
                     className="flex flex-col items-center gap-5 w-full"
                 >
-                    {isGoogle ? (
-                        <div className="text-center text-red-500 font-medium">
-                            You signed in with Google. Password changes are
-                            unavailable.
-                        </div>
-                    ) : (
-                        <>
-                            <input
-                                type="password"
-                                value={oldPassword}
-                                onChange={(e) => setOldPassword(e.target.value)}
-                                className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                                placeholder="Old Password"
-                                autoComplete="current-password"
-                            />
-                            <input
-                                type="password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                                placeholder="New Password"
-                                autoComplete="new-password"
-                            />
-                            <input
-                                type="password"
-                                value={confirmNewPassword}
-                                onChange={(e) =>
-                                    setConfirmNewPassword(e.target.value)
-                                }
-                                className="w-full border border-gray-600 rounded-xl p-3 bg-zinc-900 text-white placeholder-gray-400 text-center text-lg focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                                placeholder="Confirm New Password"
-                                autoComplete="new-password"
-                            />
-                        </>
-                    )}
+                    <div className="relative w-full">
+                        <input
+                            type={showOldPassword ? "text" : "password"}
+                            value={oldPassword}
+                            onChange={(e) => setOldPassword(e.target.value)}
+                            className="w-full border border-gray-600 rounded-xl p-3 pr-12 bg-zinc-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                            placeholder="Old Password"
+                            autoComplete="current-password"
+                        />
+                        <button
+                            type="button"
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none cursor-pointer"
+                            onClick={() => setShowOldPassword(!showOldPassword)}
+                            aria-label={
+                                showOldPassword
+                                    ? "Hide password"
+                                    : "Show password"
+                            }
+                        >
+                            {showOldPassword ? (
+                                <HiEyeOff size={20} />
+                            ) : (
+                                <HiEye size={20} />
+                            )}
+                        </button>
+                    </div>
+                    <div className="relative w-full">
+                        <input
+                            type={showNewPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(e) => {
+                                const newValue = e.target.value;
+                                setNewPassword(newValue);
 
-                    <div className="flex flex-col sm:flex-row gap-4 mt-2 w-full">
+                                if (
+                                    newValue.length > 0 &&
+                                    newValue.length < 6
+                                ) {
+                                    setValidationError(
+                                        "Password must be at least 6 characters"
+                                    );
+                                } else {
+                                    setValidationError("");
+                                }
+                            }}
+                            className={`w-full border ${
+                                validationError
+                                    ? "border-red-500"
+                                    : "border-gray-600"
+                            } rounded-xl p-3 pr-12 bg-zinc-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                                validationError
+                                    ? "focus:ring-red-500"
+                                    : "focus:ring-yellow-300"
+                            }`}
+                            placeholder="New Password"
+                            autoComplete="new-password"
+                        />
+                        <button
+                            type="button"
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none cursor-pointer"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            aria-label={
+                                showNewPassword
+                                    ? "Hide password"
+                                    : "Show password"
+                            }
+                        >
+                            {showNewPassword ? (
+                                <HiEyeOff size={20} />
+                            ) : (
+                                <HiEye size={20} />
+                            )}
+                        </button>
+                        {validationError && (
+                            <div className="absolute left-full ml-4 top-1/2 transform -translate-y-1/2 bg-red-500 text-white text-sm px-4 py-1.5 rounded shadow-lg max-w-2xl z-10 sm:block hidden text-center w-1/2">
+                                {validationError}
+                                <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-8 border-transparent border-r-red-500"></div>
+                            </div>
+                        )}
+                        {validationError && (
+                            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full mb-2 bg-red-500 text-white text-sm px-3 py-1.5 rounded shadow-lg max-w-xs z-10 sm:hidden block mt-[-10px] text-center w-full">
+                                {validationError}
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-red-500"></div>
+                            </div>
+                        )}
+                    </div>
+                    <div className="relative w-full">
+                        <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={confirmNewPassword}
+                            onChange={(e) =>
+                                setConfirmNewPassword(e.target.value)
+                            }
+                            className="w-full border border-gray-600 rounded-xl p-3 pr-12 bg-zinc-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                            placeholder="Confirm New Password"
+                            autoComplete="new-password"
+                        />
+                        <button
+                            type="button"
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none cursor-pointer"
+                            onClick={() =>
+                                setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            aria-label={
+                                showConfirmPassword
+                                    ? "Hide password"
+                                    : "Show password"
+                            }
+                        >
+                            {showConfirmPassword ? (
+                                <HiEyeOff size={20} />
+                            ) : (
+                                <HiEye size={20} />
+                            )}
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 mt-4 w-full">
                         <button
                             type="button"
                             onClick={() => navigate("/profile")}
-                            className="flex-1 border-2 border-white rounded-full px-7 py-2 font-semibold text-white hover:bg-yellow-300 hover:text-black transition hover:cursor-pointer"
+                            className="flex-1 border-2 border-white rounded-full px-7 py-3 font-semibold text-white hover:bg-yellow-300 hover:text-black transition hover:cursor-pointer leading-none"
+                            disabled={isSubmitting}
                         >
                             Cancel
                         </button>
 
-                        {!isGoogle && (
-                            <button
-                                type="submit"
-                                disabled={isGoogle}
-                                className="flex-1 border-2 border-white rounded-full px-7 py-2 font-semibold text-white hover:bg-yellow-300 hover:text-black transition hover:cursor-pointer"
-                            >
-                                Confirm
-                            </button>
-                        )}
+                        <button
+                            type="submit"
+                            className={`flex-1 border-2 border-white rounded-full px-7 py-3 font-semibold text-white transition flex items-center justify-center gap-2 h-12 ${
+                                isSubmitting
+                                    ? "opacity-70 cursor-not-allowed"
+                                    : "hover:bg-yellow-300 hover:text-black hover:cursor-pointer"
+                            }`}
+                            disabled={isSubmitting}
+                        >
+                            <div className="flex items-center justify-center h-full">
+                                {isSubmitting ? (
+                                    <ThreeDot
+                                        color="#fde047"
+                                        size="small"
+                                        text=""
+                                        textColor=""
+                                    />
+                                ) : (
+                                    <span className="leading-none">Save</span>
+                                )}
+                            </div>
+                        </button>
                     </div>
-
-                    {error && (
-                        <div className="text-red-500 text-sm mt-2">{error}</div>
-                    )}
-                    {success && (
-                        <div className="text-green-400 text-sm mt-2">
-                            {success}
-                        </div>
-                    )}
                 </form>
             </div>
         </div>
