@@ -14,18 +14,72 @@ import {
 import { db } from "../../firebase/firebaseConfig";
 import { useAuth } from "../context/AuthContext";
 
+// Toast component
+const Toast = ({ message, type, onClose }) => {
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            onClose();
+        }, 5000);
+        return () => clearTimeout(timer);
+    }, [onClose]);
+
+    const getToastStyle = () => {
+        switch (type) {
+            case 'success':
+                return 'bg-green-600 border-green-500';
+            case 'error':
+                return 'bg-red-600 border-red-500';
+            case 'warning':
+                return 'bg-yellow-600 border-yellow-500';
+            default:
+                return 'bg-blue-600 border-blue-500';
+        }
+    };
+
+    return (
+        <div className={`fixed top-4 right-4 z-50 border-l-4 rounded-lg p-4 shadow-lg text-white max-w-md ${getToastStyle()}`}>
+            <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">{message}</span>
+                <button
+                    onClick={onClose}
+                    className="ml-4 text-white hover:text-gray-200 font-bold"
+                >
+                    ×
+                </button>
+            </div>
+        </div>
+    );
+};
+
 export default function NotificationsPage() {
     const { user } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [bills, setBills] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [toasts, setToasts] = useState([]);
+
+    const intervalOptions = [
+        { value: "Weekly", label: "Weekly", days: 7 },
+        { value: "Monthly", label: "Monthly", days: 30 },
+        { value: "Bi-Annually", label: "Bi-Annually", days: 182 },
+        { value: "Annually", label: "Annually", days: 365 }
+    ];
 
     useEffect(() => {
         if (user) {
             loadBillsAndGenerateNotifications();
         }
     }, [user]);
+
+    const showToast = (message, type = 'info') => {
+        const id = Date.now();
+        setToasts(prev => [...prev, { id, message, type }]);
+    };
+
+    const removeToast = (id) => {
+        setToasts(prev => prev.filter(toast => toast.id !== id));
+    };
 
     const loadBillsAndGenerateNotifications = async () => {
         try {
@@ -71,8 +125,13 @@ export default function NotificationsPage() {
             });
 
             setNotifications(allNotifs);
+            
+            if (newNotifications.length > 0) {
+                showToast(`Generated ${newNotifications.length} new notification(s)`, 'success');
+            }
         } catch (error) {
             console.error("Error loading data:", error);
+            showToast("Error loading notifications", 'error');
         } finally {
             setLoading(false);
         }
@@ -83,9 +142,9 @@ export default function NotificationsPage() {
         const newNotifs = [];
 
         for (const bill of billsData) {
-            const daysUntilDue = getDaysUntilDue(bill.dayOfMonth);
+            const daysUntilDue = getDaysUntilDue(bill.lastPaymentDate, bill.interval);
             
-            if (daysUntilDue <= 7 && daysUntilDue >= 0) {
+            if (daysUntilDue <= 7 && daysUntilDue >= -1) { // Include 1 day overdue
                 const todayStr = today.toDateString();
                 const existingNotif = existingNotifs.find(notif => 
                     notif.billId === bill.id && 
@@ -96,7 +155,11 @@ export default function NotificationsPage() {
                     let message = "";
                     let urgency = "normal";
 
-                    if (daysUntilDue === 0) {
+                    if (daysUntilDue < 0) {
+                        const daysOverdue = Math.abs(daysUntilDue);
+                        message = `${bill.name} is ${daysOverdue} day${daysOverdue > 1 ? 's' : ''} overdue!`;
+                        urgency = "urgent";
+                    } else if (daysUntilDue === 0) {
                         message = `${bill.name} is due today!`;
                         urgency = "urgent";
                     } else if (daysUntilDue === 1) {
@@ -107,7 +170,7 @@ export default function NotificationsPage() {
                         urgency = "normal";
                     }
 
-                    const nextDueDate = getNextBillDate(bill.dayOfMonth);
+                    const nextDueDate = getNextPaymentDate(bill.lastPaymentDate, bill.interval);
                     
                     const notificationData = {
                         title: "Bill Reminder",
@@ -129,6 +192,7 @@ export default function NotificationsPage() {
                         });
                     } catch (error) {
                         console.error("Error saving notification:", error);
+                        showToast("Error saving notification", 'error');
                     }
                 }
             }
@@ -137,49 +201,34 @@ export default function NotificationsPage() {
         return newNotifs;
     };
 
-    const getDaysUntilDue = (dayOfMonth) => {
+    const getDaysUntilDue = (lastPaymentDate, interval) => {
+        if (!lastPaymentDate || !interval) return 999;
+        
+        const intervalData = intervalOptions.find(opt => opt.value === interval);
+        if (!intervalData) return 999;
+
+        const lastDate = new Date(lastPaymentDate);
+        const nextDate = new Date(lastDate);
+        nextDate.setDate(lastDate.getDate() + intervalData.days);
+        
         const today = new Date();
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-        const currentDay = today.getDate();
-        
-        let targetMonth = currentMonth;
-        let targetYear = currentYear;
-        
-        if (dayOfMonth < currentDay) {
-            targetMonth = currentMonth + 1;
-            if (targetMonth > 11) {
-                targetMonth = 0;
-                targetYear = currentYear + 1;
-            }
-        }
-        
-        const dueDate = new Date(targetYear, targetMonth, dayOfMonth);
-        const timeDiff = dueDate.getTime() - today.getTime();
-        const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        const timeDiff = nextDate - today;
+        const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
         
         return daysDiff;
     };
 
-    const getNextBillDate = (dayOfMonth) => {
-        const today = new Date();
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-        const currentDay = today.getDate();
+    const getNextPaymentDate = (lastPaymentDate, interval) => {
+        if (!lastPaymentDate || !interval) return "Invalid date";
         
-        let nextMonth = currentMonth;
-        let nextYear = currentYear;
-        
-        if (dayOfMonth <= currentDay) {
-            nextMonth = currentMonth + 1;
-            if (nextMonth > 11) {
-                nextMonth = 0;
-                nextYear = currentYear + 1;
-            }
-        }
-        
-        const nextBillDate = new Date(nextYear, nextMonth, dayOfMonth);
-        return nextBillDate.toLocaleDateString('en-US', {
+        const intervalData = intervalOptions.find(opt => opt.value === interval);
+        if (!intervalData) return "Invalid date";
+
+        const lastDate = new Date(lastPaymentDate);
+        const nextDate = new Date(lastDate);
+        nextDate.setDate(lastDate.getDate() + intervalData.days);
+
+        return nextDate.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
             year: 'numeric'
@@ -212,9 +261,17 @@ export default function NotificationsPage() {
         try {
             await deleteDoc(doc(db, "notifications", notificationId));
             setNotifications(notifications.filter(notif => notif.id !== notificationId));
+            showToast("Notification dismissed", 'success');
         } catch (error) {
             console.error("Error dismissing notification:", error);
+            showToast("Error dismissing notification", 'error');
         }
+    };
+
+    const handleRefreshNotifications = () => {
+        setLoading(true);
+        loadBillsAndGenerateNotifications();
+        showToast("Refreshing notifications...", 'info');
     };
 
     const formatDate = (date) => {
@@ -246,9 +303,18 @@ export default function NotificationsPage() {
             </div>
 
             <main className="w-full md:ml-[20%] flex-1 flex flex-col min-h-screen px-4 md:px-14 py-10 mt-16 md:mt-0 overflow-y-auto">
-                <h1 className="text-2xl md:text-4xl font-bold mb-8 text-white">
-                    Notifications
-                </h1>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                    <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-0">
+                        Notifications
+                    </h1>
+                    <button
+                        onClick={handleRefreshNotifications}
+                        className="border-2 border-yellow-300 text-yellow-300 bg-zinc-900 rounded-full px-4 md:px-6 py-2 text-sm md:text-base font-bold hover:bg-yellow-300 hover:text-black transition"
+                        disabled={loading}
+                    >
+                        {loading ? 'Refreshing...' : 'Refresh'}
+                    </button>
+                </div>
                 
                 {loading ? (
                     <div className="bg-zinc-900 border border-white/30 rounded-xl px-6 py-8 text-center">
@@ -309,6 +375,18 @@ export default function NotificationsPage() {
                     </div>
                 )}
             </main>
+
+            {/* Toast container */}
+            <div className="fixed top-4 right-4 z-50 space-y-2">
+                {toasts.map((toast) => (
+                    <Toast
+                        key={toast.id}
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => removeToast(toast.id)}
+                    />
+                ))}
+            </div>
         </div>
     );
 }
