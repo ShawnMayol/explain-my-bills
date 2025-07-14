@@ -273,13 +273,13 @@ export default function BillsPage() {
                   <div className="flex gap-2 mt-4 md:mt-0">
                     <button
                       onClick={() => handleEditBill(bill)}
-                      className="border-2 border-yellow-300 text-yellow-300 rounded-full px-4 md:px-6 py-2 text-sm md:text-base font-bold hover:bg-yellow-300 hover:text-black transition"
+                      className="border-2 border-yellow-300 text-yellow-300 rounded-full px-4 md:px-6 py-2 text-sm md:text-base font-bold hover:bg-yellow-300 hover:text-black transition cursor-pointer"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDeleteBill(bill.id)}
-                      className="border-2 border-red-500 text-red-500 rounded-full px-4 md:px-6 py-2 text-sm md:text-base font-bold hover:bg-red-500 hover:text-white transition"
+                      className="border-2 border-red-500 text-red-500 rounded-full px-4 md:px-6 py-2 text-sm md:text-base font-bold hover:bg-red-500 hover:text-white transition cursor-pointer"
                     >
                       Delete
                     </button>
@@ -293,7 +293,7 @@ export default function BillsPage() {
         <div className="flex justify-center md:justify-end mt-8 md:mt-12">
           <button
             onClick={handleAddBill}
-            className="border-2 border-yellow-300 text-yellow-300 bg-zinc-900 rounded-full px-6 md:px-8 py-2 md:py-3 text-lg md:text-xl font-bold hover:bg-yellow-300 hover:text-black transition shadow"
+            className="border-2 border-yellow-300 text-yellow-300 bg-zinc-900 rounded-full px-6 md:px-8 py-2 md:py-3 text-lg md:text-xl font-bold hover:bg-yellow-300 hover:text-black transition shadow cursor-pointer"
           >
             + Add Recurring Bill
           </button>
@@ -331,7 +331,7 @@ export default function BillsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, interval: e.target.value })
                   }
-                  className="w-full border border-gray-600 rounded-lg p-3 bg-zinc-800 text-white focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                  className="w-full border border-gray-600 rounded-lg p-3 bg-zinc-800 text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 cursor-pointer"
                   required
                 >
                   {intervalOptions.map((option) => (
@@ -354,7 +354,7 @@ export default function BillsPage() {
                       lastPaymentDate: e.target.value,
                     })
                   }
-                  className="w-full border border-gray-600 rounded-lg p-3 bg-zinc-800 text-white focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                  className="w-full border border-gray-600 rounded-lg p-3 bg-zinc-800 text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 cursor-pointer"
                   required
                 />
               </div>
@@ -362,13 +362,13 @@ export default function BillsPage() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 border-2 border-gray-500 text-gray-300 rounded-lg py-2 font-medium hover:bg-gray-500 hover:text-white transition"
+                  className="flex-1 border-2 border-gray-500 text-gray-300 rounded-lg py-2 font-medium hover:bg-gray-500 hover:text-white transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 border-2 border-yellow-300 text-yellow-300 rounded-lg py-2 font-medium hover:bg-yellow-300 hover:text-black transition"
+                  className="flex-1 border-2 border-yellow-300 text-yellow-300 rounded-lg py-2 font-medium hover:bg-yellow-300 hover:text-black transition cursor-pointer"
                 >
                   {editingBill ? "Update" : "Add"}
                 </button>
