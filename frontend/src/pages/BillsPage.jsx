@@ -43,7 +43,7 @@ export default function BillsPage() {
 
   const loadBills = async () => {
     try {
-      const billsRef = collection(db, "recurring_bills");
+      const billsRef = collection(db, "users", user.uid, "bills");
       const q = query(
         billsRef,
         where("userId", "==", user.uid),
@@ -131,7 +131,13 @@ export default function BillsPage() {
 
     try {
       if (editingBill) {
-        const billRef = doc(db, "recurring_bills", editingBill.id);
+        const billRef = doc(
+          db,
+          "users",
+          user.uid,
+          "reccuring_bills",
+          editingBill.id
+        );
         await updateDoc(billRef, {
           name: formData.name.trim(),
           interval: formData.interval,
@@ -139,7 +145,7 @@ export default function BillsPage() {
           updatedAt: new Date(),
         });
       } else {
-        await addDoc(collection(db, "recurring_bills"), {
+        await addDoc(collection(db, "users", user.uid, "reccuring_bills"), {
           name: formData.name.trim(),
           interval: formData.interval,
           lastPaymentDate: formData.lastPaymentDate,
@@ -160,7 +166,7 @@ export default function BillsPage() {
 
   const handleDeleteBill = async (billId) => {
     try {
-      await deleteDoc(doc(db, "recurring_bills", billId));
+      await deleteDoc(doc(db, "users", user.uid, "reccuring_bills", billId));
       await loadBills();
     } catch (error) {
       console.error("Error deleting bill:", error);
