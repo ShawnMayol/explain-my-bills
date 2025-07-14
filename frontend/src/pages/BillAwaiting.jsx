@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LinearProgress from "@mui/material/LinearProgress";
 
+const API_URL = "https://explain-my-bills.onrender.com";
+
 export default function BillAwaiting() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -37,7 +39,7 @@ export default function BillAwaiting() {
                 formData.append("prompt_imgs", file);
             });
 
-            fetch("http://localhost:8000/bill/bill_reading_v2", {
+            fetch(`${API_URL}/bill/bill_reading_v2`, {
                 method: "POST",
                 body: formData,
                 signal: controller.signal,
@@ -73,7 +75,7 @@ export default function BillAwaiting() {
             const fileToProcess = files ? files[0] : singleFile;
             formData.append("prompt_img", fileToProcess);
 
-            fetch("http://localhost:8000/bill/bill_reading", {
+            fetch(`${API_URL}/bill/bill_reading`, {
                 method: "POST",
                 body: formData,
                 signal: controller.signal,
