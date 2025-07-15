@@ -292,7 +292,7 @@ export default function NotificationsPage() {
             />
 
             <div
-                className={`fixed top-0 left-0 right-0 z-30 md:hidden flex items-center h-12 px-4 py-7 transition-colors duration-300 bg-black/10`}
+                className={`fixed top-0 left-0 right-0 z-30 md:hidden flex items-center h-12 px-4 py-7 transition-colors duration-300 bg-[#1B1C21]`}
             >
                 <button
                     className="text-yellow-300 hover:text-white cursor-pointer ps-5"
@@ -312,38 +312,50 @@ export default function NotificationsPage() {
                         className="border-2 border-yellow-300 text-yellow-300 bg-zinc-900 rounded-full px-4 md:px-6 py-2 text-sm md:text-base font-bold hover:bg-yellow-300 hover:text-black transition"
                         disabled={loading}
                     >
-                        {loading ? 'Refreshing...' : 'Refresh'}
+                        {loading ? "Refreshing..." : "Refresh"}
                     </button>
                 </div>
-                
+
                 {loading ? (
                     <div className="bg-zinc-900 border border-white/30 rounded-xl px-6 py-8 text-center">
-                        <p className="text-gray-400">Loading notifications...</p>
+                        <p className="text-gray-400">
+                            Loading notifications...
+                        </p>
                     </div>
                 ) : notifications.length === 0 ? (
                     <div className="bg-zinc-900 border border-white/30 rounded-xl px-6 py-8 text-center">
-                        <p className="text-gray-400 text-lg">No notifications at the moment</p>
-                        <p className="text-gray-500 text-sm mt-2">You'll be notified when bills are due soon</p>
+                        <p className="text-gray-400 text-lg">
+                            No notifications at the moment
+                        </p>
+                        <p className="text-gray-500 text-sm mt-2">
+                            You'll be notified when bills are due soon
+                        </p>
                     </div>
                 ) : (
                     <div className="flex flex-col gap-4 md:gap-5">
                         {notifications.map((notif) => (
                             <div
                                 key={notif.id}
-                                className={`border rounded-xl px-4 md:px-6 py-4 md:py-5 flex flex-col shadow ${getUrgencyStyle(notif.urgency)}`}
+                                className={`border rounded-xl px-4 md:px-6 py-4 md:py-5 flex flex-col shadow ${getUrgencyStyle(
+                                    notif.urgency
+                                )}`}
                             >
                                 <div className="flex flex-col md:flex-row justify-between items-start">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className={`font-bold text-base md:text-lg ${getUrgencyTextColor(notif.urgency)}`}>
+                                            <span
+                                                className={`font-bold text-base md:text-lg ${getUrgencyTextColor(
+                                                    notif.urgency
+                                                )}`}
+                                            >
                                                 {notif.title}
                                             </span>
-                                            {notif.urgency === 'urgent' && (
+                                            {notif.urgency === "urgent" && (
                                                 <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
                                                     URGENT
                                                 </span>
                                             )}
-                                            {notif.urgency === 'high' && (
+                                            {notif.urgency === "high" && (
                                                 <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold">
                                                     HIGH
                                                 </span>
@@ -363,7 +375,11 @@ export default function NotificationsPage() {
                                             {formatDate(notif.createdAt)}
                                         </div>
                                         <button
-                                            onClick={() => handleDismissNotification(notif.id)}
+                                            onClick={() =>
+                                                handleDismissNotification(
+                                                    notif.id
+                                                )
+                                            }
                                             className="text-gray-400 hover:text-red-400 text-sm font-medium transition"
                                         >
                                             Dismiss

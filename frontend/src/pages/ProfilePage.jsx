@@ -93,7 +93,7 @@ export default function ProfilePage() {
                 onClose={() => setSidebarOpen(false)}
             />
 
-            <div className="absolute top-0 left-0 right-0 z-30 md:hidden bg-black/10 flex items-center h-12 px-4 py-7">
+            <div className="fixed top-0 left-0 right-0 z-30 md:hidden bg-[#1B1C21] flex items-center h-12 px-4 py-7">
                 <button
                     className="text-yellow-300 hover:text-white cursor-pointer ps-5"
                     onClick={() => setSidebarOpen(true)}

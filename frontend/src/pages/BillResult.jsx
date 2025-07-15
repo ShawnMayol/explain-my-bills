@@ -288,238 +288,269 @@ export default function BillResult() {
     : "";
 
   return (
-    <div className="flex min-h-screen w-full bg-[#1B1C21] text-white overflow-y-auto overflow-x-hidden relative">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex min-h-screen w-full bg-[#1B1C21] text-white overflow-y-auto overflow-x-hidden relative">
+          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div
-        className={`fixed top-0 left-0 right-0 z-30 md:hidden flex items-center h-12 px-4 py-7 transition-colors duration-300 ${
-          scrolled ? "bg-black/50" : "bg-black/10"
-        }`}
-      >
-        <button
-          className="text-yellow-300 hover:text-white cursor-pointer ps-5"
-          onClick={() => setSidebarOpen(true)}
-        >
-          <HiOutlineMenu className="w-7 h-7" />
-        </button>
+          <div
+              className={`fixed top-0 left-0 right-0 z-30 md:hidden flex items-center h-12 px-4 py-7 transition-colors duration-300 bg-[#1B1C21]`}
+          >
+              <button
+                  className="text-yellow-300 hover:text-white cursor-pointer ps-5"
+                  onClick={() => setSidebarOpen(true)}
+              >
+                  <HiOutlineMenu className="w-7 h-7" />
+              </button>
+          </div>
+          {showImageModal && (
+              <div
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
+                  onClick={() => setShowImageModal(false)}
+              >
+                  <div
+                      className="relative"
+                      onClick={(e) => e.stopPropagation()}
+                  >
+                      <button
+                          className="absolute top-2 right-2 bg-black/50 hover:bg-black text-white text-3xl z-10 rounded-full p-2 transition cursor-pointer"
+                          onClick={() => setShowImageModal(false)}
+                          aria-label="Close"
+                      >
+                          <HiOutlineX />
+                      </button>
+                      <img
+                          src={imgUrls[currentImageIndex]}
+                          alt={`bill ${currentImageIndex + 1}`}
+                          className="max-h-[90vh] max-w-[90vw] rounded-lg shadow-2xl"
+                      />
+                      {imgUrls.length > 1 && (
+                          <>
+                              <button
+                                  onClick={() => navigateImage("prev")}
+                                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black text-white rounded-full p-2 transition cursor-pointer"
+                                  aria-label="Previous image"
+                              >
+                                  <HiChevronLeft className="w-6 h-6" />
+                              </button>
+                              <button
+                                  onClick={() => navigateImage("next")}
+                                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black text-white rounded-full p-2 transition cursor-pointer"
+                                  aria-label="Next image"
+                              >
+                                  <HiChevronRight className="w-6 h-6" />
+                              </button>
+                              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-black/50 text-white rounded text-sm">
+                                  {currentImageIndex + 1} / {imgUrls.length}
+                              </div>
+                          </>
+                      )}
+                  </div>
+              </div>
+          )}
+
+          <main className="w-full md:ml-[20%] flex-1 flex flex-col items-center px-4 md:px-10 py-12 min-h-screen mt-4">
+              <div className="w-full max-w-6xl">
+                  <span className="mb-6 block text-yellow-300 font-semibold text-xl md:text-2xl">
+                      {isBillValid ? "Summarized Bill Result" : "Invalid Bill"}
+                  </span>
+                  <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
+                      <div className="flex-shrink-0 w-full lg:w-auto flex flex-col items-center">
+                          <div className="relative w-full max-w-[300px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-[300px] xl:max-w-[400px] aspect-square bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
+                              {imgUrls.length > 0 ? (
+                                  <>
+                                      <img
+                                          src={imgUrls[currentImageIndex]}
+                                          alt={`bill ${currentImageIndex + 1}`}
+                                          className="object-contain h-full w-full rounded cursor-zoom-in"
+                                          onClick={() =>
+                                              setShowImageModal(true)
+                                          }
+                                      />
+                                      {imgUrls.length > 1 && (
+                                          <>
+                                              <button
+                                                  onClick={() =>
+                                                      navigateImage("prev")
+                                                  }
+                                                  className="absolute left-2 top-1/2 transform -translate-y-1/2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 cursor-pointer"
+                                              >
+                                                  <HiChevronLeft className="w-5 h-5" />
+                                              </button>
+                                              <button
+                                                  onClick={() =>
+                                                      navigateImage("next")
+                                                  }
+                                                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 cursor-pointer"
+                                              >
+                                                  <HiChevronRight className="w-5 h-5" />
+                                              </button>
+                                              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-black/50 text-white rounded text-sm">
+                                                  {currentImageIndex + 1} /{" "}
+                                                  {imgUrls.length}
+                                              </div>
+                                          </>
+                                      )}
+                                  </>
+                              ) : (
+                                  <span className="text-gray-400">
+                                      No Image
+                                  </span>
+                              )}
+                          </div>
+                      </div>
+                      <section className="flex-1 flex flex-col space-y-6 w-full min-w-0">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-8 lg:gap-x-12 gap-y-4">
+                              <InfoItem
+                                  label="Bill Type"
+                                  value={billData.billType}
+                              />
+                              {isBillValid && (
+                                  <>
+                                      <InfoItem
+                                          label="Issuer"
+                                          value={billData.issuer}
+                                      />
+                                      <InfoItem
+                                          label="Total"
+                                          value={
+                                              billData.totalBill !== undefined
+                                                  ? `Php ${billData.totalBill.toLocaleString(
+                                                        "en-PH",
+                                                        {
+                                                            minimumFractionDigits: 2,
+                                                            maximumFractionDigits: 2,
+                                                        }
+                                                    )}`
+                                                  : "—"
+                                          }
+                                      />
+                                      <InfoItem
+                                          label="Bill Date"
+                                          value={
+                                              billData.billDate
+                                                  ? new Date(
+                                                        billData.billDate
+                                                    ).toLocaleDateString(
+                                                        "en-US",
+                                                        {
+                                                            year: "numeric",
+                                                            month: "long",
+                                                            day: "numeric",
+                                                        }
+                                                    )
+                                                  : "—"
+                                          }
+                                      />
+                                  </>
+                              )}
+                          </div>
+
+                          <Card
+                              title="Explanation"
+                              content={billData.explanation}
+                          />
+                          {isBillValid && (
+                              <>
+                                  <Card
+                                      title="Highlights"
+                                      content={highlightStr || "None"}
+                                  />
+                                  <Card
+                                      title="Discrepancies"
+                                      content={billData.discrepancies || "None"}
+                                  />
+                              </>
+                          )}
+
+                          <div className="flex flex-col sm:flex-row justify-end gap-4 mt-6 mb-10">
+                              <button
+                                  onClick={handleSave}
+                                  disabled={!isBillValid || isSaving}
+                                  className={`w-full sm:w-32 py-2 border-2 border-white rounded-full font-semibold text-white transition flex items-center justify-center gap-2 ${
+                                      isBillValid && !isSaving
+                                          ? "hover:bg-yellow-300 hover:text-black cursor-pointer"
+                                          : "opacity-50 cursor-not-allowed"
+                                  }`}
+                              >
+                                  {isSaving && (
+                                      <svg
+                                          className="animate-spin h-4 w-4"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                      >
+                                          <circle
+                                              className="opacity-25"
+                                              cx="12"
+                                              cy="12"
+                                              r="10"
+                                              stroke="currentColor"
+                                              strokeWidth="4"
+                                          />
+                                          <path
+                                              className="opacity-75"
+                                              fill="currentColor"
+                                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                          />
+                                      </svg>
+                                  )}
+                                  {isSaving ? (
+                                      <span>Saving</span>
+                                  ) : (
+                                      <span>Save</span>
+                                  )}
+                              </button>
+                              <button
+                                  onClick={handleDelete}
+                                  className="w-full sm:w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-red-500 hover:text-white transition cursor-pointer"
+                              >
+                                  Delete
+                              </button>
+                          </div>
+                      </section>
+                  </div>
+              </div>
+          </main>
+
+          <Toaster
+              position="top-right"
+              toastOptions={{
+                  duration: 3000,
+                  style: {
+                      background: "#18181b",
+                      color: "#fff",
+                      border: "1px solid #374151",
+                  },
+              }}
+          />
+
+          <Dialog
+              open={showDeleteDialog}
+              onClose={cancelDelete}
+              PaperProps={{
+                  sx: {
+                      backgroundColor: "#18181b",
+                      color: "white",
+                      border: "1px solid #374151",
+                  },
+              }}
+          >
+              <DialogTitle>Confirm Delete</DialogTitle>
+              <DialogContent>
+                  <DialogContentText sx={{ color: "#9ca3af" }}>
+                      Are you sure you want to discard this bill? This action
+                      cannot be undone.
+                  </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                  <Button onClick={cancelDelete} sx={{ color: "#9ca3af" }}>
+                      Cancel
+                  </Button>
+                  <Button onClick={confirmDelete} sx={{ color: "#ef4444" }}>
+                      Delete
+                  </Button>
+              </DialogActions>
+          </Dialog>
       </div>
-      {showImageModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
-          onClick={() => setShowImageModal(false)}
-        >
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="absolute top-2 right-2 bg-black/50 hover:bg-black text-white text-3xl z-10 rounded-full p-2 transition cursor-pointer"
-              onClick={() => setShowImageModal(false)}
-              aria-label="Close"
-            >
-              <HiOutlineX />
-            </button>
-            <img
-              src={imgUrls[currentImageIndex]}
-              alt={`bill ${currentImageIndex + 1}`}
-              className="max-h-[90vh] max-w-[90vw] rounded-lg shadow-2xl"
-            />
-            {imgUrls.length > 1 && (
-              <>
-                <button
-                  onClick={() => navigateImage("prev")}
-                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black text-white rounded-full p-2 transition cursor-pointer"
-                  aria-label="Previous image"
-                >
-                  <HiChevronLeft className="w-6 h-6" />
-                </button>
-                <button
-                  onClick={() => navigateImage("next")}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black text-white rounded-full p-2 transition cursor-pointer"
-                  aria-label="Next image"
-                >
-                  <HiChevronRight className="w-6 h-6" />
-                </button>
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-black/50 text-white rounded text-sm">
-                  {currentImageIndex + 1} / {imgUrls.length}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      <main className="w-full md:ml-[20%] flex-1 flex flex-col items-center px-4 md:px-10 py-12 min-h-screen mt-4">
-        <div className="w-full max-w-6xl">
-          <span className="mb-6 block text-yellow-300 font-semibold text-xl md:text-2xl">
-            {isBillValid ? "Summarized Bill Result" : "Invalid Bill"}
-          </span>
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
-            <div className="flex-shrink-0 w-full lg:w-auto flex flex-col items-center">
-              <div className="relative w-full max-w-[300px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-[300px] xl:max-w-[400px] aspect-square bg-zinc-900 border-2 border-white rounded-lg flex items-center justify-center mb-4">
-                {imgUrls.length > 0 ? (
-                  <>
-                    <img
-                      src={imgUrls[currentImageIndex]}
-                      alt={`bill ${currentImageIndex + 1}`}
-                      className="object-contain h-full w-full rounded cursor-zoom-in"
-                      onClick={() => setShowImageModal(true)}
-                    />
-                    {imgUrls.length > 1 && (
-                      <>
-                        <button
-                          onClick={() => navigateImage("prev")}
-                          className="absolute left-2 top-1/2 transform -translate-y-1/2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 cursor-pointer"
-                        >
-                          <HiChevronLeft className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => navigateImage("next")}
-                          className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 cursor-pointer"
-                        >
-                          <HiChevronRight className="w-5 h-5" />
-                        </button>
-                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-black/50 text-white rounded text-sm">
-                          {currentImageIndex + 1} / {imgUrls.length}
-                        </div>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <span className="text-gray-400">No Image</span>
-                )}
-              </div>
-            </div>
-            <section className="flex-1 flex flex-col space-y-6 w-full min-w-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-8 lg:gap-x-12 gap-y-4">
-                <InfoItem label="Bill Type" value={billData.billType} />
-                {isBillValid && (
-                  <>
-                    <InfoItem label="Issuer" value={billData.issuer} />
-                    <InfoItem
-                      label="Total"
-                      value={
-                        billData.totalBill !== undefined
-                          ? `Php ${billData.totalBill.toLocaleString("en-PH", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}`
-                          : "—"
-                      }
-                    />
-                    <InfoItem
-                      label="Bill Date"
-                      value={
-                        billData.billDate
-                          ? new Date(billData.billDate).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              }
-                            )
-                          : "—"
-                      }
-                    />
-                  </>
-                )}
-              </div>
-
-              <Card title="Explanation" content={billData.explanation} />
-              {isBillValid && (
-                <>
-                  <Card title="Highlights" content={highlightStr || "None"} />
-                  <Card
-                    title="Discrepancies"
-                    content={billData.discrepancies || "None"}
-                  />
-                </>
-              )}
-
-              <div className="flex flex-col sm:flex-row justify-end gap-4 mt-6 mb-10">
-                <button
-                  onClick={handleSave}
-                  disabled={!isBillValid || isSaving}
-                  className={`w-full sm:w-32 py-2 border-2 border-white rounded-full font-semibold text-white transition flex items-center justify-center gap-2 ${
-                    isBillValid && !isSaving
-                      ? "hover:bg-yellow-300 hover:text-black cursor-pointer"
-                      : "opacity-50 cursor-not-allowed"
-                  }`}
-                >
-                  {isSaving && (
-                    <svg
-                      className="animate-spin h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                  )}
-                  {isSaving ? <span>Saving</span> : <span>Save</span>}
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="w-full sm:w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-red-500 hover:text-white transition cursor-pointer"
-                >
-                  Delete
-                </button>
-              </div>
-            </section>
-          </div>
-        </div>
-      </main>
-
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: "#18181b",
-            color: "#fff",
-            border: "1px solid #374151",
-          },
-        }}
-      />
-
-      <Dialog
-        open={showDeleteDialog}
-        onClose={cancelDelete}
-        PaperProps={{
-          sx: {
-            backgroundColor: "#18181b",
-            color: "white",
-            border: "1px solid #374151",
-          },
-        }}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ color: "#9ca3af" }}>
-            Are you sure you want to discard this bill? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={cancelDelete} sx={{ color: "#9ca3af" }}>
-            Cancel
-          </Button>
-          <Button onClick={confirmDelete} sx={{ color: "#ef4444" }}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </div>
   );
 }
 

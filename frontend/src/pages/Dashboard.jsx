@@ -142,7 +142,7 @@ export default function Dashboard() {
                 onClose={() => setSidebarOpen(false)}
             />
 
-            <div className="absolute top-0 left-0 right-0 z-30 md:hidden bg-black/10 flex items-center h-12 px-4 py-7">
+            <div className="fixed top-0 left-0 right-0 z-30 md:hidden flex items-center h-12 px-4 py-7 transition-colors duration-300 bg-[#1B1C21]">
                 <button
                     className="text-yellow-300 hover:text-white cursor-pointer ps-5"
                     onClick={() => setSidebarOpen(true)}
@@ -154,7 +154,7 @@ export default function Dashboard() {
             <div className="absolute left-90 -top-30 w-160 h-160 rounded-full bg-gray-100 opacity-8 blur-3xl pointer-events-none z-0"></div>
             <div className="absolute -right-20 -bottom-40 w-90 h-90 rounded-full bg-gray-100 opacity-8 blur-3xl pointer-events-none z-0"></div>
 
-            <div className="md:ml-[20%] flex-1 px-4 md:px-10 relative overflow-y-auto pb-10">
+            <div className="md:ml-[20%] flex-1 px-4 md:px-10 relative overflow-y-auto pb-10 mt-4">
                 <h1 className="text-2xl mt-14 md:text-4xl text-yellow-300 font-bold mb-4 md:mb-10">
                     Recent Summarized Bills
                 </h1>
