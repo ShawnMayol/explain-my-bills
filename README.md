@@ -3,23 +3,6 @@
 
 ---
 
-## To-Do List
-
-- [x] Explain My Bills icon
-- [ ] Re-summarize button on bill result page
-- [ ] Report wrong summarization on bill result button on result page?
-- [x] Analytics page
-- [ ] Notifications page
-- [ ] Bills page
-- [x] Limit max recent summarized bills on Dashboard (implement pagination or just limit max)
-- [ ] Sort feature on Dashboard?
-- [x] Implement forgot password
-- [x] Better error field for SignIn and SignUp
-- [x] Show and hide password feature
-- [x] Use toast instead of alerts
-
----
-
 ## Description
 
 Utility, telecom, and medical bills are often unclear and full of fine print.
