@@ -248,7 +248,7 @@ export default function BillDetail() {
                         </div>
 
                         <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
-                            <div className="flex-shrink-0 w-full lg:w-auto flex flex-col items-center">
+                            <div className="flex-shrink-0 w-full md:w-[400px] flex flex-col items-center">
                                 <div className="relative w-full max-w-[300px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-[300px] xl:max-w-[400px] aspect-square bg-zinc-900 border-2 rounded-lg flex items-center justify-center mb-4">
                                     <div className="w-full h-full bg-zinc-800 rounded animate-pulse"></div>
                                 </div>
