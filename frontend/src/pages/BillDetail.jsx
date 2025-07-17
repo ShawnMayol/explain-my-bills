@@ -143,18 +143,15 @@ export default function BillDetail() {
                     "Deleting image with public ID:",
                     billData.publicId
                 );
-                const response = await fetch(
-                    `${API_URL}/delete-cloudinary`,
-                    {
-                        method: "DELETE",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            publicId: billData.publicId,
-                        }),
-                    }
-                );
+                const response = await fetch(`${API_URL}/delete-cloudinary`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        publicId: billData.publicId,
+                    }),
+                });
 
                 if (!response.ok) {
                     console.warn(
@@ -253,7 +250,7 @@ export default function BillDetail() {
                         <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
                             <div className="flex-shrink-0 w-full lg:w-auto flex flex-col items-center">
                                 <div className="relative w-full max-w-[300px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-[300px] xl:max-w-[400px] aspect-square bg-zinc-900 border-2 rounded-lg flex items-center justify-center mb-4">
-                                    <div className="w-[400px] h-[400px] bg-zinc-800 rounded animate-pulse"></div>
+                                    <div className="w-full h-full bg-zinc-800 rounded animate-pulse"></div>
                                 </div>
                             </div>
 
@@ -587,7 +584,6 @@ export default function BillDetail() {
                                 />
 
                                 <div className="justify-end flex mt-6 mb-10">
-                                    
                                     <button
                                         onClick={() => navigate("/dashboard")}
                                         className="w-full sm:w-32 py-2 border-2 border-white rounded-full font-semibold text-white hover:bg-yellow-300 hover:text-black transition cursor-pointer"
