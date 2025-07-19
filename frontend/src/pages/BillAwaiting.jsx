@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LinearProgress from "@mui/material/LinearProgress";
 
-const API_URL = "https://explain-my-bills.onrender.com";
+const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
 export default function BillAwaiting() {
     const location = useLocation();

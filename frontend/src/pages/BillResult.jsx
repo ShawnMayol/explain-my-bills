@@ -24,7 +24,7 @@ import {
   DialogContentText,
 } from "@mui/material";
 
-const API_URL = "https://explain-my-bills.onrender.com";
+const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
 function usePrompt(message, shouldBlockRef) {
   const { navigator } = useContext(UNSAFE_NavigationContext);
