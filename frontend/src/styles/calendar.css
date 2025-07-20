@@ -1,0 +1,138 @@
+/* Custom Calendar Styles */
+.rbc-calendar {
+    font-family: inherit;
+}
+
+.rbc-header {
+    padding: 8px 3px;
+    background-color: rgba(24, 24, 27, 0.6);
+    font-weight: 600;
+    color: #fbbf24;
+}
+
+.rbc-off-range-bg {
+    background-color: rgba(39, 39, 42, 0.5);
+}
+
+.rbc-date-cell {
+    padding: 5px;
+    text-align: center;
+    color: #e4e4e7;
+}
+
+.rbc-month-view {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.rbc-day-bg {
+    transition: background-color 0.2s;
+}
+
+.rbc-day-bg:hover {
+    background-color: rgba(39, 39, 42, 0.8);
+}
+
+.rbc-today {
+    background-color: rgba(251, 191, 36, 0.1);
+}
+
+.rbc-month-row,
+.rbc-row-bg {
+    overflow: hidden;
+}
+
+.rbc-event {
+    border-radius: 3px;
+    padding: 2px 4px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.rbc-toolbar button {
+    color: white;
+    background-color: rgba(39, 39, 42, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.rbc-toolbar button:hover,
+.rbc-toolbar button:active,
+.rbc-toolbar button.rbc-active {
+    background-color: #fbbf24;
+    color: black;
+    border-color: #fbbf24;
+}
+
+.rbc-toolbar button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.5);
+}
+
+.rbc-toolbar button.rbc-active:focus {
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.5);
+}
+
+.rbc-toolbar button.rbc-active {
+    background-color: #fbbf24;
+    color: black;
+    border-color: #fbbf24;
+}
+
+.rbc-day-slot .rbc-event {
+    border-radius: 3px;
+}
+
+.rbc-event-label {
+    font-weight: 600;
+}
+
+.rbc-agenda-view table.rbc-agenda-table {
+    color: white;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.rbc-agenda-view table.rbc-agenda-table thead > tr > th {
+    background-color: rgba(24, 24, 27, 0.6);
+    color: #fbbf24;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.rbc-agenda-time-cell {
+    font-variant-numeric: tabular-nums;
+}
+
+.rbc-week-view .rbc-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rbc-time-view {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.rbc-time-content {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.rbc-time-header {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.rbc-time-header-content {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.rbc-time-slot {
+    color: #a1a1aa;
+}
+
+.rbc-current-time-indicator {
+    background-color: #fbbf24;
+    height: 2px;
+}
