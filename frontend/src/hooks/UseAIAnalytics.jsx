@@ -3,7 +3,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
 
 // Changed to deployed API via Render
-const API_URL = "https://explain-my-bills.onrender.com";
+const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
 const generateDataHash = (bills) =>
   JSON.stringify(bills.map((b) => [b.tooltipLabel, b.value]));
