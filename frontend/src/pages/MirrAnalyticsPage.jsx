@@ -1,10 +1,9 @@
 /**
- * 
+ *
  * This is the testing page of Analytics Page where the new changes will be implemented
  * - Nash
- * 
+ *
  */
-
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import Sidebar from "../components/Sidebar";
@@ -216,10 +215,9 @@ export default function AnalyticsPage() {
 
   return (
     <div className="relative flex h-screen w-screen bg-[#1B1C21] text-white overflow-hidden">
-
-        {/* Sidebar */}
+      {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        
+
       <div
         className={`fixed top-0 left-0 right-0 z-30 md:hidden flex items-center h-12 px-4 py-7 transition-colors duration-300 bg-[#1B1C21]`}
       >
@@ -231,10 +229,12 @@ export default function AnalyticsPage() {
         </button>
       </div>
 
-        {/* Main Analytics */}
+      {/* Main Analytics */}
       <main className="w-full md:ml-[20%] flex-1 flex flex-col px-4 md:px-14 py-10 mt-8 md:mt-0 overflow-y-auto">
-        <h1 className="text-2xl text-red-600 font-bold text-center">THIS IS THE MIRROR PAGE OF ANALYTICS</h1>
-    
+        <h1 className="text-2xl text-red-600 font-bold text-center">
+          THIS IS THE MIRROR PAGE OF ANALYTICS
+        </h1>
+
         <MirrAnalyticsHeader
           category={category}
           selectedYear={selectedYear}
