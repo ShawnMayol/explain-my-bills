@@ -271,11 +271,11 @@ export const UseAIAnalytics = () => {
           })
           .join("\n");
 
-        console.log("Analytics: Fetching new AI summary from actual API...");
+        console.log("Analytics: Fetching new AI summary from actual API..." + payload);
         const response = await fetch(`${API_URL}/bill/analytics`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ time_series_data: payload, bill_type: category }),
+          body: JSON.stringify({ time_series_data: payload }),
           signal: AbortSignal.timeout(30000),
         });
 

@@ -54,7 +54,6 @@ logger = logging.getLogger(__name__)
 
 class AnalyticsRequest(BaseModel):
     time_series_data: str
-    bill_type: BillType
     skipAI: Optional[bool] = False
 
 
@@ -145,9 +144,7 @@ async def analytics(request: AnalyticsRequest):
 
         dev_prompt = (
             "Data: " + request.time_series_data + 
-            "\n" +
-            "Bill Type: " + request.bill_type
-            + """
+            """
             \n
             Context: This time series data are the expenses or bills of a user in a particular type or category.
             Find me the key information from this time series data and summarize it. Format it into two paragraphs:
