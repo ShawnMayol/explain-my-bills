@@ -266,7 +266,7 @@ export const UseAIAnalytics = () => {
               day: "numeric",
             });
             return `Date: ${formattedDate}, Category: ${
-              bill.category
+              bill.category || category
             }, Value: ${bill.value}, Description: ${bill.description || ""}`;
           })
           .join("\n");
