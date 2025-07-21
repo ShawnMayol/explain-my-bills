@@ -18,9 +18,6 @@ import NotificationsPage from "./pages/NotificationsPage.jsx";
 import BillsPage from "./pages/BillsPage.jsx";
 import BillDetail from "./pages/BillDetail.jsx";
 
-// Test Page
-import MirrAnalyticsPage from "./pages/MirrAnalyticsPage.jsx";
-
 function App() {
   return (
     <>
@@ -120,14 +117,6 @@ function App() {
           element={
             <ProtectedRoute>
               <BillDetail />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mirr-analytics"
-          element={
-            <ProtectedRoute>
-              <MirrAnalyticsPage />
             </ProtectedRoute>
           }
         />
