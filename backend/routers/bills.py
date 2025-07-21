@@ -158,6 +158,7 @@ async def analytics(request: AnalyticsRequest):
             }
 
             Ensure all strings are properly escaped and the output is valid JSON.
+            Ensure that when there are financial values, it must be in this format <denomination e.g. Php> <number e.g. 100.00, 1,000.00>.
         """
         )
 
