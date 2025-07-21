@@ -126,7 +126,7 @@ async def bill_read(prompt_img: UploadFile = File(...)):
 async def analytics(request: AnalyticsRequest):
     """
     Analyzes user time series billing data to generate a summarized JSON response.
-    Expects a JSON body: {"time_series_data": "<string>"}
+    Expects a JSON body: {"time_series_data": "<string>", "bill_type": "<BillType>}
     """
     try:
         if request.skipAI:
@@ -143,8 +143,8 @@ async def analytics(request: AnalyticsRequest):
             )
 
         dev_prompt = (
-            request.time_series_data
-            + """
+            "Data: " + request.time_series_data + 
+            """
             \n
             Context: This time series data are the expenses or bills of a user in a particular type or category.
             Find me the key information from this time series data and summarize it. Format it into two paragraphs:
@@ -158,6 +158,7 @@ async def analytics(request: AnalyticsRequest):
             }
 
             Ensure all strings are properly escaped and the output is valid JSON.
+            Ensure that when there are financial values, it must be in this format <denomination e.g. Php> <number e.g. 100.00, 1,000.00>.
         """
         )
 
