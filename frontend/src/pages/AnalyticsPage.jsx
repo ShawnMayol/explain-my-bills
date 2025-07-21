@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
     setSelectedYear(e.target.value ? +e.target.value : null);
   }, []);
 
-  const isChartLoading = billsLoading || isTransitioning || !isChartReady;
+  const isChartLoading = billsLoading || isTransitioning;
   const hasChartData = filteredBills.length > 0 && selectedYear !== null;
 
   useEffect(() => {
@@ -164,10 +164,8 @@ export default function AnalyticsPage() {
         setIsTransitioning(false);
       }, 500);
       return () => clearTimeout(timer);
-    } else if (!billsLoading && selectedYear !== null) {
-      setIsChartReady(true);
-    } else {
-      setIsChartReady(false);
+    } else if (!billsLoading) {
+      setIsChartReady(true); // ready as soon as the fetch finishes,
     }
   }, [billsLoading, selectedYear, isTransitioning]);
 
