@@ -275,7 +275,7 @@ export const UseAIAnalytics = () => {
         const response = await fetch(`${API_URL}/bill/analytics`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ time_series_data: payload }),
+          body: JSON.stringify({ time_series_data: payload, bill_type: category }),
           signal: AbortSignal.timeout(30000),
         });
 

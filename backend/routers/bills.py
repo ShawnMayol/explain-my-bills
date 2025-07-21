@@ -54,6 +54,7 @@ logger = logging.getLogger(__name__)
 
 class AnalyticsRequest(BaseModel):
     time_series_data: str
+    bill_type: BillType
     skipAI: Optional[bool] = False
 
 
@@ -126,7 +127,7 @@ async def bill_read(prompt_img: UploadFile = File(...)):
 async def analytics(request: AnalyticsRequest):
     """
     Analyzes user time series billing data to generate a summarized JSON response.
-    Expects a JSON body: {"time_series_data": "<string>"}
+    Expects a JSON body: {"time_series_data": "<string>", "bill_type": "<BillType>}
     """
     try:
         if request.skipAI:
@@ -143,7 +144,9 @@ async def analytics(request: AnalyticsRequest):
             )
 
         dev_prompt = (
-            request.time_series_data
+            "Data: " + request.time_series_data + 
+            "\n" +
+            "Bill Type: " + request.bill_type
             + """
             \n
             Context: This time series data are the expenses or bills of a user in a particular type or category.
