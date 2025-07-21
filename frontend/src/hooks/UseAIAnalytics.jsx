@@ -271,7 +271,7 @@ export const UseAIAnalytics = () => {
           })
           .join("\n");
 
-        console.log("Analytics: Fetching new AI summary from actual API..." + payload);
+        console.log("Analytics: Fetching new AI summary from actual API...");
         const response = await fetch(`${API_URL}/bill/analytics`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
