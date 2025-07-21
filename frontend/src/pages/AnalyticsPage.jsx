@@ -6,7 +6,7 @@ import { UseAIAnalytics } from "../hooks/UseAIAnalytics";
 import { AnalyticsHeader } from "../components/AnalyticsHeader";
 import { ChartContainer } from "../components/ChartContainer";
 import { AnalyticsSummary } from "../components/AnalyticsSummary";
-import { AnnualExpenseCard } from "../components/AnnualExpenseCard";
+import { MonthlyExpenseCard } from "../components/MonthlyExpenseCard"; // Corrected import
 import { HiOutlineMenu } from "react-icons/hi";
 
 const CATEGORIES = [
@@ -22,10 +22,15 @@ const CATEGORIES = [
 
 export default function AnalyticsPage() {
   const [category, setCategory] = useState(CATEGORIES[0].value);
-  const [selectedYear, setSelectedYear] = useState(null);
   const [isChartReady, setIsChartReady] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+
+  // NEW STATE: This state will control when to actually trigger the AI analytics fetch
+  // It starts as false, and AnalyticsSummary will tell it when to become true.
+  const [triggerAIAnalyticsFetch, setTriggerAIAnalyticsFetch] = useState(false);
 
   const user = UseAuth();
   const {
@@ -35,13 +40,16 @@ export default function AnalyticsPage() {
     fetchBills,
   } = UseBillData();
 
+  // UseAIAnalytics hook call.
+  // We will now pass relevant filtering data directly to the hook from AnalyticsPage.
+  // The hook itself will manage its internal state and caching based on these props.
   const {
     summary,
     suggestion,
     isLoading: aiLoading,
     error: aiError,
-    fetchAnalytics,
-  } = UseAIAnalytics();
+    fetchAnalytics, // This is the function we need to call
+  } = UseAIAnalytics(); // No longer passing data as props here, but in the useEffect
 
   const yearOptions = useMemo(() => {
     const years = Array.from(new Set(allBills.map((bill) => bill.year))).sort(
@@ -51,22 +59,86 @@ export default function AnalyticsPage() {
   }, [allBills]);
 
   const filteredBills = useMemo(() => {
-    if (!selectedYear) return [];
-    return allBills.filter((bill) => bill.year === selectedYear);
-  }, [allBills, selectedYear]);
+    if (!startDate || !endDate) return [];
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setMonth(end.getMonth() + 1);
+    end.setDate(0); // Set to the last day of the selected end month
+    end.setHours(23, 59, 59, 999); // Set to end of day for inclusive range
+
+    return allBills.filter((bill) => {
+      const billDate = new Date(bill.date); // Ensure bill.date is a Date object
+      return billDate >= start && billDate <= end;
+    });
+  }, [allBills, startDate, endDate]);
+
+  const currentMonthTotal = useMemo(() => {
+    if (!startDate || !endDate) return 0;
+
+    const targetMonth = endDate.getMonth();
+    const targetYear = endDate.getFullYear();
+
+    return allBills.reduce((sum, bill) => {
+      const billDate = new Date(bill.date);
+      if (
+        billDate.getMonth() === targetMonth &&
+        billDate.getFullYear() === targetYear
+      ) {
+        return sum + bill.value;
+      }
+      return sum;
+    }, 0);
+  }, [allBills, startDate, endDate]);
+
+  const previousMonthTotal = useMemo(() => {
+    if (!startDate || !endDate) return 0;
+
+    const previousMonthDate = new Date(endDate);
+    previousMonthDate.setMonth(previousMonthDate.getMonth() - 1);
+
+    const targetMonth = previousMonthDate.getMonth();
+    const targetYear = previousMonthDate.getFullYear();
+
+    return allBills.reduce((sum, bill) => {
+      const billDate = new Date(bill.date);
+      if (
+        billDate.getMonth() === targetMonth &&
+        billDate.getFullYear() === targetYear
+      ) {
+        return sum + bill.value;
+      }
+      return sum;
+    }, 0);
+  }, [allBills, startDate, endDate]);
+
+  const monthlyExpenseChange = useMemo(() => {
+    if (previousMonthTotal === 0) {
+      return currentMonthTotal > 0 ? Infinity : 0;
+    }
+    const change =
+      ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100;
+    return change;
+  }, [currentMonthTotal, previousMonthTotal]);
 
   const chartData = useMemo(() => {
     if (filteredBills.length === 0) {
       return { labels: [], datasets: [] };
     }
 
+    const sortedBills = [...filteredBills].sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateA.getTime() - dateB.getTime();
+    });
+
     return {
-      labels: filteredBills.map((bill) => bill.monthLabel),
+      labels: sortedBills.map((bill) => bill.monthLabel),
       datasets: [
         {
           label: "My Bills",
-          data: filteredBills.map((bill) => bill.value),
-          tooltipLabels: filteredBills.map((bill) => bill.tooltipLabel),
+          data: sortedBills.map((bill) => bill.value),
+          tooltipLabels: sortedBills.map((bill) => bill.tooltipLabel),
           fill: true,
           pointRadius: 6,
           pointHoverRadius: 8,
@@ -78,10 +150,6 @@ export default function AnalyticsPage() {
         },
       ],
     };
-  }, [filteredBills]);
-
-  const annualTotal = useMemo(() => {
-    return filteredBills.reduce((sum, bill) => sum + bill.value, 0);
   }, [filteredBills]);
 
   const chartOptions = useMemo(
@@ -133,29 +201,31 @@ export default function AnalyticsPage() {
     [category]
   );
 
-  const handleCategoryChange = useCallback(
-    (e) => {
-      const newCategory = e.target.value;
+  const handleCategoryChange = useCallback((e) => {
+    const newCategory = e.target.value;
+    setIsTransitioning(true);
+    setIsChartReady(false);
+    setCategory(newCategory);
+    setTriggerAIAnalyticsFetch(false); // Reset AI summary visibility when category changes
+  }, []);
+
+  const handleMonthYearRangeChange = useCallback(
+    ({ startMonth, startYear, endMonth, endYear }) => {
+      const newStartDate = new Date(startYear, startMonth, 1);
+      const newEndDate = new Date(endYear, endMonth, 1);
+
+      setStartDate(newStartDate);
+      setEndDate(newEndDate);
 
       setIsTransitioning(true);
       setIsChartReady(false);
-      setCategory(newCategory);
-
-      if (user?.uid) {
-        fetchBills(user.uid, newCategory);
-      }
+      setTriggerAIAnalyticsFetch(false); // Reset AI summary visibility when date range changes
     },
-    [user?.uid, fetchBills]
+    []
   );
 
-  const handleYearChange = useCallback((e) => {
-    setIsTransitioning(true);
-    setIsChartReady(false);
-    setSelectedYear(e.target.value ? +e.target.value : null);
-  }, []);
-
   const isChartLoading = billsLoading || isTransitioning;
-  const hasChartData = filteredBills.length > 0 && selectedYear !== null;
+  const hasChartData = filteredBills.length > 0;
 
   useEffect(() => {
     if (isTransitioning) {
@@ -165,36 +235,59 @@ export default function AnalyticsPage() {
       }, 500);
       return () => clearTimeout(timer);
     } else if (!billsLoading) {
-      setIsChartReady(true); // ready as soon as the fetch finishes,
+      setIsChartReady(true);
     }
-  }, [billsLoading, selectedYear, isTransitioning]);
+  }, [billsLoading, isTransitioning]);
 
   const isLoading = billsLoading || aiLoading;
   const error = billsError || aiError;
 
   useEffect(() => {
-    if (
-      yearOptions.length > 0 &&
-      (!selectedYear || !yearOptions.includes(selectedYear))
-    ) {
-      setSelectedYear(yearOptions[0]);
-    }
-  }, [yearOptions, selectedYear]);
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    const initialStartDate = new Date(currentYear, currentMonth, 1);
+    setStartDate(initialStartDate);
+
+    const initialEndDate = new Date(currentYear, currentMonth + 1, 0); // Last day of current month
+    setEndDate(initialEndDate);
+  }, []);
 
   useEffect(() => {
     if (!user?.uid) return;
     fetchBills(user.uid, category);
   }, [user?.uid, category, fetchBills]);
 
+  // This useEffect will now *conditionally* call fetchAnalytics
   useEffect(() => {
-    if (!billsLoading && selectedYear !== null) {
-      const filteredBills = allBills.filter(
-        (bill) => bill.year === selectedYear
+    if (
+      triggerAIAnalyticsFetch && // Only fetch if the button has been pressed
+      !billsLoading &&
+      startDate &&
+      endDate &&
+      user?.uid
+    ) {
+      const selectedYearForAI = startDate ? startDate.getFullYear() : null;
+      fetchAnalytics(
+        filteredBills,
+        category,
+        selectedYearForAI,
+        user.uid,
+        startDate,
+        endDate
       );
-
-      fetchAnalytics(filteredBills, category, selectedYear, user.uid);
     }
-  }, [billsLoading, allBills, selectedYear, category, fetchAnalytics]);
+  }, [
+    triggerAIAnalyticsFetch, // New dependency
+    billsLoading,
+    filteredBills,
+    category,
+    startDate,
+    endDate,
+    fetchAnalytics,
+    user?.uid,
+  ]);
 
   if (!user) {
     return (
@@ -222,10 +315,8 @@ export default function AnalyticsPage() {
       <main className="w-full md:ml-[20%] flex-1 flex flex-col px-4 md:px-14 py-10 mt-8 md:mt-0 overflow-y-auto">
         <AnalyticsHeader
           category={category}
-          selectedYear={selectedYear}
-          yearOptions={yearOptions}
           onCategoryChange={handleCategoryChange}
-          onYearChange={handleYearChange}
+          onMonthYearRangeChange={handleMonthYearRangeChange}
           isLoading={isLoading}
         />
 
@@ -241,9 +332,14 @@ export default function AnalyticsPage() {
             suggestion={suggestion}
             isLoading={aiLoading}
             error={error}
+            // NEW PROP: Pass the function to trigger the fetch
+            onGenerateSummaryClick={() => setTriggerAIAnalyticsFetch(true)}
+            // NEW PROP: Pass down the trigger state to control visibility of button
+            aiGenerateSummary={triggerAIAnalyticsFetch}
           />
-          <AnnualExpenseCard
-            annualTotal={annualTotal}
+          <MonthlyExpenseCard
+            monthlyTotal={currentMonthTotal}
+            percentageChange={monthlyExpenseChange}
             isLoading={!isChartReady}
             hasData={true}
           />
